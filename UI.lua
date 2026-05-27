@@ -222,6 +222,17 @@ function UI:BuildGrindLines()
         end
     end
 
+    table.insert(lines, "")
+    table.insert(lines, "Best XP/hour")
+    local best = ns.Grinding:GetBestSessions(8)
+    if #best == 0 then
+        table.insert(lines, "No best-session comparisons yet.")
+    else
+        for index, session in ipairs(best) do
+            table.insert(lines, tostring(index) .. ". " .. tostring(session.name) .. " | " .. tostring(session.class) .. " level " .. tostring(session.levelStart) .. " | " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour | " .. ns:FormatNumber(session.xpGained or 0) .. " XP | " .. ns:FormatMoney(session.totalValueCopper or 0))
+        end
+    end
+
     return lines
 end
 
