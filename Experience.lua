@@ -27,12 +27,30 @@ function Experience:OnInitialize()
     ns:RegisterEvent("QUEST_COMPLETE", self, "OnQuestComplete")
     ns:RegisterEvent("QUEST_TURNED_IN", self, "OnQuestTurnedIn")
     ns:RegisterEvent("TIME_PLAYED_MSG", self, "OnTimePlayed")
+    self:HookQuestCompleteButton()
 end
 
 function Experience:OnPlayerLogin()
     self:Snapshot()
+    self:HookQuestCompleteButton()
     if type(RequestTimePlayed) == "function" then
         RequestTimePlayed()
+    end
+end
+
+function Experience:HookQuestCompleteButton()
+    if self.questButtonHooked then
+        return
+    end
+    if QuestFrameCompleteButton and QuestFrameCompleteButton.HookScript then
+        QuestFrameCompleteButton:HookScript("OnClick", function()
+            local rewardXP = nil
+            if type(GetRewardXP) == "function" then
+                rewardXP = GetRewardXP()
+            end
+            Experience:AddPending("QUEST", rewardXP, 0, { message = "Quest completion button" })
+        end)
+        self.questButtonHooked = true
     end
 end
 
