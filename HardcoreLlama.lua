@@ -163,6 +163,7 @@ function ns:PrintHelp()
     self:Print("/hcl grind start [name] - start a grind session")
     self:Print("/hcl grind stop - stop and save the active grind session")
     self:Print("/hcl grind status - show active grind-session rates")
+    self:Print("/hcl grind best - show the best saved grind sessions by XP/hour")
 end
 
 function ns:HandleSlash(input)
@@ -203,8 +204,10 @@ function ns:HandleSlash(input)
             self.Grinding:Stop()
         elseif subCommand == "status" then
             self.Grinding:PrintStatus()
+        elseif subCommand == "best" then
+            self.Grinding:PrintBest()
         else
-            self:Print("Unknown grind command. Try /hcl grind start, stop, or status.")
+            self:Print("Unknown grind command. Try /hcl grind start, stop, status, or best.")
         end
     else
         self:Print("Unknown command: " .. command)
