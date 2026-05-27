@@ -15,7 +15,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Tracks every character that logs in on the account/PC through account-wide SavedVariables.
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
-- Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, and estimated vendor value from looted items.
+- Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, and best-session comparison by grind/class.
 - Shows due and upcoming training reminders, including class-trainer visits and First Aid rank training.
 
 ## Slash Commands
@@ -26,6 +26,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - `/hcl grind start [name]` - Start a grind session. If no name is supplied, the current zone is used.
 - `/hcl grind stop` - Stop the active grind session and save it.
 - `/hcl grind status` - Print the active grind-session snapshot.
+- `/hcl grind best` - Print the best saved grind sessions by XP/hour.
 - `/hcl help` - Show command help.
 
 ## Notes
