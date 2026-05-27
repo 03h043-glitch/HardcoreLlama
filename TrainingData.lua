@@ -1,0 +1,66 @@
+local _, ns = ...
+
+ns.TrainingData = {
+    classTraining = {
+        DEFAULT = {
+            title = "Class training available",
+            where = "Any major city or appropriate class trainer.",
+            cost = "Varies by spell rank.",
+        },
+        DRUID = { where = "Druid trainers in Moonglade, Thunder Bluff, Darnassus, and capital cities.", cost = "Varies by ability rank." },
+        HUNTER = { where = "Hunter trainers in major cities and many leveling hubs.", cost = "Varies by ability rank." },
+        MAGE = { where = "Mage trainers in major cities and many leveling hubs.", cost = "Varies by spell rank." },
+        PALADIN = { where = "Paladin trainers in Stormwind, Ironforge, Darnassus, and Alliance hubs.", cost = "Varies by ability rank." },
+        PRIEST = { where = "Priest trainers in major cities and many leveling hubs.", cost = "Varies by spell rank." },
+        ROGUE = { where = "Rogue trainers in major cities and many leveling hubs.", cost = "Varies by ability rank." },
+        SHAMAN = { where = "Shaman trainers in Orgrimmar, Thunder Bluff, Undercity, and Horde hubs.", cost = "Varies by ability rank." },
+        WARLOCK = { where = "Warlock trainers in major cities and many leveling hubs.", cost = "Varies by spell rank." },
+        WARRIOR = { where = "Warrior trainers in major cities and many leveling hubs.", cost = "Varies by ability rank." },
+    },
+
+    firstAid = {
+        {
+            id = "firstaid-apprentice",
+            title = "Learn Apprentice First Aid",
+            learnIfMissing = true,
+            requiredLevel = 5,
+            where = "First Aid trainers in starting towns and capital cities.",
+            costCopper = 100,
+            details = "Useful early Hardcore safety because bandages work between pulls and do not cost mana.",
+        },
+        {
+            id = "firstaid-journeyman",
+            title = "Train Journeyman First Aid",
+            requiredSkill = 50,
+            upcomingSkill = 40,
+            requiredCap = 75,
+            targetCap = 150,
+            where = "First Aid trainers in major cities.",
+            costCopper = 500,
+            details = "Raises your First Aid cap from 75 to 150.",
+        },
+        {
+            id = "firstaid-expert",
+            title = "Buy Expert First Aid - Under Wraps",
+            requiredSkill = 125,
+            upcomingSkill = 115,
+            requiredCap = 150,
+            targetCap = 225,
+            where = "Alliance: Deneb Walker in Stromgarde Keep. Horde: Balai Lok'Wein in Brackenwall Village.",
+            costCopper = 10000,
+            details = "Raises your First Aid cap from 150 to 225.",
+        },
+        {
+            id = "firstaid-artisan",
+            title = "Complete Triage for Artisan First Aid",
+            requiredSkill = 225,
+            upcomingSkill = 210,
+            requiredCap = 225,
+            requiredLevel = 35,
+            targetCap = 300,
+            where = "Alliance: Doctor Gustaf VanHowzen in Theramore. Horde: Doctor Gregory Victor in Hammerfall.",
+            cost = "Quest unlock; bring bandages and clear bag space.",
+            details = "Raises your First Aid cap from 225 to 300 after the Triage quest.",
+        },
+    },
+}
