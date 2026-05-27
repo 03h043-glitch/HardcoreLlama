@@ -59,8 +59,18 @@ function Experience:Snapshot()
 end
 
 function Experience:AddPending(source, amount, restedAmount, context)
+    source = source or "OTHER"
+
+    if source == "QUEST" then
+        for index = #self.pending, 1, -1 do
+            if self.pending[index].source == "QUEST" then
+                table.remove(self.pending, index)
+            end
+        end
+    end
+
     table.insert(self.pending, {
-        source = source or "OTHER",
+        source = source,
         amount = amount and math.floor(amount) or nil,
         rested = restedAmount and math.floor(restedAmount) or nil,
         context = context,
