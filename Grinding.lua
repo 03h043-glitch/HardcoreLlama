@@ -214,3 +214,41 @@ function Grinding:GetRecentSessions(limit)
 
     return sessions
 end
+
+function Grinding:GetBestSessions(limit, classFile)
+    local db = ns.Database:GetDB()
+    local sessions = {}
+    limit = limit or 5
+
+    for _, session in pairs(db.grindSessions or {}) do
+        if (not classFile or session.classFile == classFile) and (session.xpPerHour or 0) > 0 then
+            table.insert(sessions, session)
+        end
+    end
+
+    table.sort(sessions, function(left, right)
+        if (left.xpPerHour or 0) == (right.xpPerHour or 0) then
+            return (left.xpGained or 0) > (right.xpGained or 0)
+        end
+        return (left.xpPerHour or 0) > (right.xpPerHour or 0)
+    end)
+
+    while #sessions > limit do
+        table.remove(sessions)
+    end
+
+    return sessions
+end
+
+function Grinding:PrintBest()
+    local sessions = self:GetBestSessions(5)
+    if #sessions == 0 then
+        ns:Print("No saved grind sessions to compare yet.")
+        return
+    end
+
+    ns:Print("Best saved grind sessions by XP/hour:")
+    for index, session in ipairs(sessions) do
+        ns:Print(index .. ". " .. tostring(session.name) .. " - " .. tostring(session.class) .. " level " .. tostring(session.levelStart) .. ": " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour, " .. ns:FormatNumber(session.xpGained or 0) .. " XP, " .. ns:FormatMoney(session.totalValueCopper or 0))
+    end
+end
