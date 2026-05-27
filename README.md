@@ -16,13 +16,15 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
 - Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, and best-session comparison by grind/class.
-- Shows due and upcoming training reminders, including class-trainer visits and First Aid rank training.
+- Provides a compact resizable tracker window with configurable text size.
+- Shows specific class spell/rank reminders, caches exact class-trainer services after you visit a trainer, and keeps profession reminders tied to the professions and secondary skills the character actually has.
 
 ## Slash Commands
 
 - `/hcl` - Toggle the addon window.
 - `/hcl stats` - Print current character/account summary.
 - `/hcl reminders` - Print due and upcoming training reminders.
+- `/hcl font [9-18|up|down|reset]` - Adjust tracker-window text size or reset the window.
 - `/hcl grind start [name]` - Start a grind session. If no name is supplied, the current zone is used.
 - `/hcl grind stop` - Stop the active grind session and save it.
 - `/hcl grind status` - Print the active grind-session snapshot.
@@ -35,4 +37,4 @@ XP source attribution relies on Classic combat-log/chat events. Kill and discove
 
 Looted vendor value is estimated from item sell prices when item data is cached by the client. Raw money is tracked from positive money changes during an active grind session.
 
-Training reminder data lives in `TrainingData.lua` so the table can be expanded without changing the reminder engine.
+Training reminder data lives in `TrainingData.lua`. Static class-spell reminders cover early leveling, and trainer-cache reminders become more accurate after the player opens their class trainer.
