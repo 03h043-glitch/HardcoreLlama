@@ -160,10 +160,32 @@ function ns:PrintHelp()
     self:Print("/hcl - toggle the tracker window")
     self:Print("/hcl stats - print the current character summary")
     self:Print("/hcl reminders - list due and upcoming training")
+    self:Print("/hcl font [9-18|up|down|reset] - adjust window text size")
     self:Print("/hcl grind start [name] - start a grind session")
     self:Print("/hcl grind stop - stop and save the active grind session")
     self:Print("/hcl grind status - show active grind-session rates")
     self:Print("/hcl grind best - show the best saved grind sessions by XP/hour")
+end
+
+function ns:HandleFontCommand(rest)
+    if not self.UI then
+        self:Print("UI module is not loaded.")
+        return
+    end
+
+    rest = trim(rest)
+    if rest == "" then
+        local settings = self.Database and self.Database:GetDB().settings.ui
+        self:Print("window text size is " .. tostring(settings and settings.fontSize or 12) .. ".")
+    elseif rest == "up" or rest == "+" then
+        self.UI:AdjustFont(1)
+    elseif rest == "down" or rest == "-" then
+        self.UI:AdjustFont(-1)
+    elseif rest == "reset" then
+        self.UI:ResetWindow()
+    else
+        self.UI:SetFontSize(tonumber(rest) or 12)
+    end
 end
 
 function ns:HandleSlash(input)
@@ -191,6 +213,8 @@ function ns:HandleSlash(input)
         if self.Reminders then
             self.Reminders:PrintReminders()
         end
+    elseif command == "font" or command == "text" then
+        self:HandleFontCommand(rest)
     elseif command == "grind" then
         local subCommand, subRest = rest:match("^(%S+)%s*(.-)$")
         subCommand = string.lower(subCommand or "status")
