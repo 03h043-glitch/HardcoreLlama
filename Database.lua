@@ -22,11 +22,6 @@ local SOURCE_ALIASES = {
 local SOURCE_ORDER = { "QUEST", "KILL", "EXPLORATION", "BONUS", "OTHER" }
 ns.SOURCE_ORDER = SOURCE_ORDER
 
-local function ensureMap(parent, key)
-    parent[key] = parent[key] or {}
-    return parent[key]
-end
-
 function Database:Initialize()
     HardcoreLlamaDB = HardcoreLlamaDB or {}
     local db = HardcoreLlamaDB
@@ -39,9 +34,15 @@ function Database:Initialize()
     db.fastestLevelTimesByClass = db.fastestLevelTimesByClass or {}
     db.grindSessions = db.grindSessions or {}
     db.grindSessionOrder = db.grindSessionOrder or {}
+    db.trainerCache = db.trainerCache or { classSpells = {} }
+    db.trainerCache.classSpells = db.trainerCache.classSpells or {}
     db.reminders = db.reminders or { dismissed = {} }
     db.settings = db.settings or {}
     db.settings.maxGrindSessions = db.settings.maxGrindSessions or 100
+    db.settings.ui = db.settings.ui or {}
+    db.settings.ui.fontSize = db.settings.ui.fontSize or 12
+    db.settings.ui.windowWidth = db.settings.ui.windowWidth or 430
+    db.settings.ui.windowHeight = db.settings.ui.windowHeight or 330
     if db.settings.notifyTrainingReminders == nil then
         db.settings.notifyTrainingReminders = true
     end
@@ -273,11 +274,12 @@ function Database:StoreLevelTime(level, seconds, character, timingSource)
     end
 end
 
-function Database:RecordProfession(skillName, rank, maxRank)
+function Database:RecordProfession(skillName, rank, maxRank, category)
     local character = self:TouchCharacter()
     character.professions[skillName] = {
         rank = rank or 0,
         maxRank = maxRank or 0,
+        category = category,
         updatedAt = ns:Now(),
     }
 end
