@@ -34,12 +34,15 @@ function Database:Initialize()
     db.fastestLevelTimesByClass = db.fastestLevelTimesByClass or {}
     db.grindSessions = db.grindSessions or {}
     db.grindSessionOrder = db.grindSessionOrder or {}
+    db.dungeonRuns = db.dungeonRuns or {}
+    db.dungeonRunOrder = db.dungeonRunOrder or {}
     db.fallenHeroes = db.fallenHeroes or {}
     db.trainerCache = db.trainerCache or { classSpells = {} }
     db.trainerCache.classSpells = db.trainerCache.classSpells or {}
     db.reminders = db.reminders or { dismissed = {} }
     db.settings = db.settings or {}
     db.settings.maxGrindSessions = db.settings.maxGrindSessions or 100
+    db.settings.maxDungeonRuns = db.settings.maxDungeonRuns or 100
     db.settings.ui = db.settings.ui or {}
     db.settings.ui.fontSize = db.settings.ui.fontSize or 12
     db.settings.ui.windowWidth = db.settings.ui.windowWidth or 430
@@ -80,6 +83,7 @@ function Database:EnsureCharacterTables(character)
     character.levelHistory = character.levelHistory or {}
     character.levelTimes = character.levelTimes or {}
     character.grindSessionIds = character.grindSessionIds or {}
+    character.dungeonRunIds = character.dungeonRunIds or {}
     character.professions = character.professions or {}
 end
 
@@ -311,6 +315,9 @@ function Database:RecordXPGain(amount, source, restedAmount, context)
     if ns.Grinding then
         ns.Grinding:RecordXPGain(amount, source, restedAmount, context)
     end
+    if ns.Dungeons then
+        ns.Dungeons:RecordXPGain(amount, source, restedAmount, context)
+    end
 
     ns:MaybeRefreshUI()
 end
@@ -385,8 +392,9 @@ end
 function Database:PrintSummary()
     local character = self:TouchCharacter()
     local xp = character.xp
+    local classText = ns.ClassColorize and ns:ClassColorize(character.class, character.classFile) or tostring(character.class)
 
-    ns:Print(character.name .. "-" .. character.realm .. " level " .. tostring(character.level) .. " " .. tostring(character.class))
+    ns:Print(character.name .. "-" .. character.realm .. " level " .. tostring(character.level) .. " " .. classText)
     ns:Print("Tracked XP: " .. ns:FormatNumber(xp.total or 0) .. " total, " .. ns:FormatNumber(xp.rested or 0) .. " rested")
 
     for _, source in ipairs(SOURCE_ORDER) do
@@ -398,6 +406,7 @@ function Database:PrintSummary()
 
     local highest = self:GetHighestCharacter()
     if highest then
-        ns:Print("Highest seen: " .. tostring(highest.name) .. " level " .. tostring(highest.maxLevel or highest.level or 0) .. " " .. tostring(highest.class))
+        local highClass = ns.ClassColorize and ns:ClassColorize(highest.class, highest.classFile) or tostring(highest.class)
+        ns:Print("Highest seen: " .. tostring(highest.name) .. " level " .. tostring(highest.maxLevel or highest.level or 0) .. " " .. highClass)
     end
 end
