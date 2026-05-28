@@ -373,7 +373,8 @@ function UI:BuildGrindLines()
         table.insert(lines, color(C.muted, "No saved grind sessions yet."))
     else
         for _, session in ipairs(sessions) do
-            table.insert(lines, color(C.accent, tostring(session.name)) .. color(C.muted, "  " .. tostring(session.class) .. " L" .. tostring(session.levelStart)))
+            local title = ns.Grinding:FormatSessionTitle(session)
+            table.insert(lines, color(C.accent, title) .. color(C.muted, "  " .. tostring(session.class) .. " L" .. tostring(session.levelStart)))
             table.insert(lines, color(C.muted, "  " .. ns:FormatNumber(session.xpGained or 0) .. " XP  |  " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour  |  " .. ns:FormatMoney(session.totalValueCopper or 0)))
         end
     end
@@ -384,7 +385,8 @@ function UI:BuildGrindLines()
         table.insert(lines, color(C.muted, "No best-session comparisons yet."))
     else
         for index, session in ipairs(best) do
-            table.insert(lines, color(C.title, tostring(index) .. ". ") .. color(C.accent, tostring(session.name)) .. color(C.muted, "  " .. tostring(session.class) .. " L" .. tostring(session.levelStart)))
+            local title = ns.Grinding:FormatSessionTitle(session)
+            table.insert(lines, color(C.title, tostring(index) .. ". ") .. color(C.accent, title) .. color(C.muted, "  " .. tostring(session.class) .. " L" .. tostring(session.levelStart)))
             table.insert(lines, color(C.muted, "  " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour  |  " .. ns:FormatNumber(session.xpGained or 0) .. " XP  |  " .. ns:FormatMoney(session.totalValueCopper or 0)))
         end
     end
