@@ -21,3 +21,4 @@ UIExtensions.lua
 DungeonUIOverrides.lua
 InfoUI.lua
 InfoSourceUI.lua
+MinimapButton.lua
