@@ -38,6 +38,18 @@ local function atan2(y, x)
     return 0
 end
 
+local function clearDragClick(button)
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0.15, function()
+            if button then
+                button.wasDragged = nil
+            end
+        end)
+    else
+        button.wasDragged = nil
+    end
+end
+
 function MinimapButton:UpdatePosition()
     if not self.button or not Minimap then
         return
@@ -152,6 +164,7 @@ function MinimapButton:BuildButton()
     button:SetScript("OnDragStop", function()
         button:SetScript("OnUpdate", nil)
         MinimapButton:UpdateDragPosition()
+        clearDragClick(button)
     end)
 
     self.button = button
