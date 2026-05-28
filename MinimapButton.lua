@@ -23,7 +23,19 @@ local function atan2(y, x)
     if math.atan2 then
         return math.atan2(y, x)
     end
-    return math.atan(y, x)
+
+    if x > 0 then
+        return math.atan(y / x)
+    elseif x < 0 and y >= 0 then
+        return math.atan(y / x) + math.pi
+    elseif x < 0 and y < 0 then
+        return math.atan(y / x) - math.pi
+    elseif x == 0 and y > 0 then
+        return math.pi / 2
+    elseif x == 0 and y < 0 then
+        return -math.pi / 2
+    end
+    return 0
 end
 
 function MinimapButton:UpdatePosition()
@@ -125,9 +137,14 @@ function MinimapButton:BuildButton()
         end
     end)
     button:SetScript("OnClick", function()
+        if button.wasDragged then
+            button.wasDragged = nil
+            return
+        end
         MinimapButton:ToggleWindow()
     end)
     button:SetScript("OnDragStart", function()
+        button.wasDragged = true
         button:SetScript("OnUpdate", function()
             MinimapButton:UpdateDragPosition()
         end)
