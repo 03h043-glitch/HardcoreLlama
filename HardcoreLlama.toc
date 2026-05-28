@@ -1,6 +1,6 @@
 ## Interface: 11508
 ## Title: HardcoreLlama
-## Notes: Hardcore character XP, grind-session, and training reminder tracker.
+## Notes: Hardcore character XP, grind-session, dungeon-run, and training reminder tracker.
 ## Author: 03h043-glitch
 ## Version: 0.1.0
 ## SavedVariables: HardcoreLlamaDB
@@ -10,6 +10,8 @@ Database.lua
 TrainingData.lua
 Experience.lua
 Grinding.lua
+Dungeons.lua
 Reminders.lua
 DeathLog.lua
 UI.lua
+UIExtensions.lua
