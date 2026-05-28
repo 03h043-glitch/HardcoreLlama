@@ -38,7 +38,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 
 XP source attribution relies on Classic combat-log/chat events. Kill and discovery XP are parsed from English XP messages; quest XP is tagged from quest completion events where the client exposes them, with a fallback attribution window around XP changes.
 
-Mob level ranges are captured when the killed mob is still visible to the client as a target, mouseover, focus, or target-target at the moment the XP message is parsed. If the level is not exposed at that moment, the grind summary still records the mob name and shows an unknown level marker.
+Mob level ranges are captured from visible unit data at the XP event and from target/mouseover sightings during the active grind. If no level is exposed for a killed mob type, the grind summary still records the mob name and shows an unknown level marker.
 
 Looted vendor value is estimated from item sell prices when item data is cached by the client. Raw money is tracked from positive money changes during an active grind session.
 
