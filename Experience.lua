@@ -20,6 +20,13 @@ local function currentState()
     return UnitLevel("player") or 0, UnitXP("player") or 0, UnitXPMax("player") or 0, rested
 end
 
+local function questRewardMoney()
+    if type(GetRewardMoney) == "function" then
+        return tonumber(GetRewardMoney()) or 0
+    end
+    return 0
+end
+
 local function visibleMobLevel(mobName)
     mobName = ns.Trim(mobName)
     if mobName == "" or type(UnitName) ~= "function" or type(UnitLevel) ~= "function" then
@@ -67,7 +74,7 @@ function Experience:HookQuestCompleteButton()
             if type(GetRewardXP) == "function" then
                 rewardXP = GetRewardXP()
             end
-            Experience:AddPending("QUEST", rewardXP, 0, { message = "Quest completion button" })
+            Experience:AddPending("QUEST", rewardXP, 0, { message = "Quest completion button", questMoney = questRewardMoney() })
         end)
         self.questButtonHooked = true
     end
@@ -164,13 +171,13 @@ function Experience:OnQuestComplete()
     if type(GetRewardXP) == "function" then
         rewardXP = GetRewardXP()
     end
-    self:AddPending("QUEST", rewardXP, 0, { message = "Quest completion" })
+    self:AddPending("QUEST", rewardXP, 0, { message = "Quest completion", questMoney = questRewardMoney() })
 end
 
-function Experience:OnQuestTurnedIn(event, questID, xpReward)
+function Experience:OnQuestTurnedIn(event, questID, xpReward, moneyReward)
     xpReward = tonumber(xpReward)
     if xpReward and xpReward > 0 then
-        self:AddPending("QUEST", xpReward, 0, { questID = questID })
+        self:AddPending("QUEST", xpReward, 0, { questID = questID, questMoney = tonumber(moneyReward) or 0 })
     end
 end
 
