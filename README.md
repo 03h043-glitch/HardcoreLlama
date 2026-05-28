@@ -15,7 +15,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Tracks every character that logs in on the account/PC through account-wide SavedVariables.
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
-- Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, and best-session comparison by grind/class.
+- Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, the most commonly killed mob with its observed level range, and best-session comparison by grind/class.
 - Provides a compact resizable tracker window with configurable text size.
 - Shows specific class spell/rank reminders, caches exact class-trainer services after you visit a trainer, and keeps profession reminders tied to the professions and secondary skills the character actually has.
 - Keeps chat reminders quiet: level-up summaries only, plus profession-cap warnings when a gained profession skill point makes the next rank trainable.
@@ -37,6 +37,8 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 ## Notes
 
 XP source attribution relies on Classic combat-log/chat events. Kill and discovery XP are parsed from English XP messages; quest XP is tagged from quest completion events where the client exposes them, with a fallback attribution window around XP changes.
+
+Mob level ranges are captured when the killed mob is still visible to the client as a target, mouseover, focus, or target-target at the moment the XP message is parsed. If the level is not exposed at that moment, the grind summary still records the mob name and shows an unknown level marker.
 
 Looted vendor value is estimated from item sell prices when item data is cached by the client. Raw money is tracked from positive money changes during an active grind session.
 
