@@ -8,6 +8,7 @@ local C = {
     accent = "|cff33ff99",
     class = "|cff8ab4ff",
     profession = "|cffd6a9ff",
+    death = "|cffff6b6b",
     white = "|cffffffff",
     muted = "|cff9d9d9d",
     dim = "|cff666666",
@@ -17,6 +18,13 @@ local C = {
 
 local function color(code, text)
     return code .. tostring(text or "") .. C.reset
+end
+
+local function formatDate(timestamp)
+    if timestamp and type(date) == "function" then
+        return date("%Y-%m-%d %H:%M", timestamp)
+    end
+    return "Unknown time"
 end
 
 local function makeButton(parent, text, width, onClick)
@@ -137,20 +145,25 @@ function UI:BuildFrame()
     end)
     frame.fontUp:SetPoint("LEFT", frame.fontDown, "RIGHT", 4, 0)
 
-    frame.overviewButton = makeButton(frame, "Overview", 76, function()
+    frame.overviewButton = makeButton(frame, "Overview", 70, function()
         ns.UI:SetView("overview")
     end)
     frame.overviewButton:SetPoint("TOPLEFT", 14, -40)
 
-    frame.grindButton = makeButton(frame, "Grind", 64, function()
+    frame.grindButton = makeButton(frame, "Grind", 56, function()
         ns.UI:SetView("grind")
     end)
     frame.grindButton:SetPoint("LEFT", frame.overviewButton, "RIGHT", 5, 0)
 
-    frame.reminderButton = makeButton(frame, "Reminders", 88, function()
+    frame.reminderButton = makeButton(frame, "Reminders", 84, function()
         ns.UI:SetView("reminders")
     end)
     frame.reminderButton:SetPoint("LEFT", frame.grindButton, "RIGHT", 5, 0)
+
+    frame.fallenButton = makeButton(frame, "Fallen", 68, function()
+        ns.UI:SetView("fallen")
+    end)
+    frame.fallenButton:SetPoint("LEFT", frame.reminderButton, "RIGHT", 5, 0)
 
     frame.startButton = makeButton(frame, "Start Grind", 92, function()
         if ns.Grinding then
@@ -379,6 +392,38 @@ function UI:BuildGrindLines()
     return lines
 end
 
+function UI:BuildFallenLines()
+    local lines = {}
+    self:Section(lines, "Fallen Heroes")
+
+    if not ns.Database then
+        table.insert(lines, color(C.warning, "Database module is not loaded."))
+        return lines
+    end
+
+    local heroes = ns.Database:GetFallenHeroes()
+    if #heroes == 0 then
+        table.insert(lines, color(C.muted, "No deaths recorded yet."))
+        return lines
+    end
+
+    for index, record in ipairs(heroes) do
+        if index > 30 then
+            break
+        end
+
+        local played = record.playedTotal and ns:FormatDuration(record.playedTotal) or "Played time pending"
+        local name = tostring(record.name or "Unknown") .. "-" .. tostring(record.realm or "UnknownRealm")
+        table.insert(lines, color(C.death, name) .. color(C.muted, "  Level ") .. color(C.white, tostring(record.level or "?") .. " " .. tostring(record.race or "") .. " " .. tostring(record.class or "")))
+        table.insert(lines, color(C.muted, "  /played " .. played .. "  |  " .. formatDate(record.diedAt)))
+        if record.zone then
+            table.insert(lines, color(C.dim, "  Zone: " .. tostring(record.zone)))
+        end
+    end
+
+    return lines
+end
+
 function UI:AddReminderGroup(lines, title, items)
     self:Section(lines, title)
     if #items == 0 then
@@ -394,7 +439,7 @@ function UI:AddReminderGroup(lines, title, items)
         if item.where then
             table.insert(meta, "Where: " .. tostring(item.where))
         end
-        if item.cost then
+        if item.kind ~= "class" and item.cost then
             table.insert(meta, "Cost: " .. tostring(item.cost))
         end
         if #meta > 0 then
@@ -427,6 +472,8 @@ function UI:Refresh()
         lines = self:BuildGrindLines()
     elseif self.view == "reminders" then
         lines = self:BuildReminderLines()
+    elseif self.view == "fallen" then
+        lines = self:BuildFallenLines()
     else
         lines = self:BuildOverviewLines()
     end
