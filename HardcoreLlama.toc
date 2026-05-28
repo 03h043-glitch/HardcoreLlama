@@ -8,6 +8,7 @@
 HardcoreLlama.lua
 Database.lua
 TrainingData.lua
+Info.lua
 Experience.lua
 Grinding.lua
 Dungeons.lua
@@ -16,3 +17,4 @@ DeathLog.lua
 UI.lua
 UIExtensions.lua
 DungeonUIOverrides.lua
+InfoUI.lua
