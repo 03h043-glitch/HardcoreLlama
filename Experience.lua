@@ -86,13 +86,18 @@ end
 
 function Experience:AddPending(source, amount, restedAmount, context)
     source = source or "OTHER"
+    context = context or {}
 
     if source == "QUEST" then
+        local preservedQuestMoney = tonumber(context.questMoney) or 0
         for index = #self.pending, 1, -1 do
             if self.pending[index].source == "QUEST" then
+                local oldContext = self.pending[index].context or {}
+                preservedQuestMoney = math.max(preservedQuestMoney, tonumber(oldContext.questMoney) or 0)
                 table.remove(self.pending, index)
             end
         end
+        context.questMoney = preservedQuestMoney
     end
 
     table.insert(self.pending, {
