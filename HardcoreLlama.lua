@@ -89,6 +89,13 @@ function ns:Print(message)
     end
 end
 
+function ns:PrintAlert(message)
+    local frame = DEFAULT_CHAT_FRAME or ChatFrame1
+    if frame then
+        frame:AddMessage("|cffff2020HARDCORELLAMA: " .. string.upper(tostring(message)) .. "|r")
+    end
+end
+
 function ns:FormatNumber(value)
     value = math.floor(tonumber(value) or 0)
     local left, num, right = tostring(value):match("^([^%d]*%d)(%d*)(.-)$")
@@ -160,6 +167,7 @@ function ns:PrintHelp()
     self:Print("/hcl - toggle the tracker window")
     self:Print("/hcl stats - print the current character summary")
     self:Print("/hcl reminders - list due and upcoming training")
+    self:Print("/hcl fallen - open the fallen heroes log")
     self:Print("/hcl font [9-18|up|down|reset] - adjust window text size")
     self:Print("/hcl grind start [name] - start a grind session")
     self:Print("/hcl grind stop - stop and save the active grind session")
@@ -188,6 +196,15 @@ function ns:HandleFontCommand(rest)
     end
 end
 
+function ns:ShowView(view)
+    if not self.UI then
+        self:Print("UI module is not loaded.")
+        return
+    end
+    self.UI:Show()
+    self.UI:SetView(view)
+end
+
 function ns:HandleSlash(input)
     input = trim(input)
     if input == "" then
@@ -213,6 +230,8 @@ function ns:HandleSlash(input)
         if self.Reminders then
             self.Reminders:PrintReminders()
         end
+    elseif command == "fallen" or command == "deaths" then
+        self:ShowView("fallen")
     elseif command == "font" or command == "text" then
         self:HandleFontCommand(rest)
     elseif command == "grind" then
