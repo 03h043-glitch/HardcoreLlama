@@ -34,6 +34,7 @@ function Database:Initialize()
     db.fastestLevelTimesByClass = db.fastestLevelTimesByClass or {}
     db.grindSessions = db.grindSessions or {}
     db.grindSessionOrder = db.grindSessionOrder or {}
+    db.fallenHeroes = db.fallenHeroes or {}
     db.trainerCache = db.trainerCache or { classSpells = {} }
     db.trainerCache.classSpells = db.trainerCache.classSpells or {}
     db.reminders = db.reminders or { dismissed = {} }
@@ -312,6 +313,62 @@ function Database:RecordXPGain(amount, source, restedAmount, context)
     end
 
     ns:MaybeRefreshUI()
+end
+
+function Database:GetFallenHeroes()
+    return self:GetDB().fallenHeroes or {}
+end
+
+function Database:RecordDeath(totalTime, levelTime)
+    local db = self:GetDB()
+    db.fallenHeroes = db.fallenHeroes or {}
+
+    local character, key = self:TouchCharacter()
+    local now = ns:Now()
+    local recent = db.fallenHeroes[1]
+
+    if recent and recent.characterKey == key and now - (recent.diedAt or 0) < 300 then
+        self:UpdateDeathPlayed(recent.id, totalTime or recent.playedTotal, levelTime or recent.playedLevel)
+        return recent.id, recent
+    end
+
+    local record = {
+        id = key .. "-" .. tostring(now),
+        characterKey = key,
+        name = character.name,
+        realm = character.realm,
+        race = character.race,
+        class = character.class,
+        classFile = character.classFile,
+        level = UnitLevel("player") or character.level or 1,
+        zone = GetZoneText and GetZoneText() or character.zone,
+        playedTotal = tonumber(totalTime) or character.playedTotal,
+        playedLevel = tonumber(levelTime) or character.playedLevel,
+        diedAt = now,
+    }
+
+    table.insert(db.fallenHeroes, 1, record)
+    character.deathRecordId = record.id
+    character.diedAt = now
+    return record.id, record
+end
+
+function Database:UpdateDeathPlayed(recordId, totalTime, levelTime)
+    if not recordId then
+        return nil
+    end
+
+    local heroes = self:GetFallenHeroes()
+    for _, record in ipairs(heroes) do
+        if record.id == recordId then
+            record.playedTotal = tonumber(totalTime) or record.playedTotal
+            record.playedLevel = tonumber(levelTime) or record.playedLevel
+            record.playedCapturedAt = ns:Now()
+            return record
+        end
+    end
+
+    return nil
 end
 
 function Database:GetHighestCharacter()
