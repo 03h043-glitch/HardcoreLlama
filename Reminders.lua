@@ -32,38 +32,51 @@ local function spellLabel(row)
 end
 
 function Reminders:OnInitialize()
-    ns:RegisterEvent("PLAYER_LEVEL_UP", self, "OnReminderEvent")
-    ns:RegisterEvent("SKILL_LINES_CHANGED", self, "OnReminderEvent")
+    ns:RegisterEvent("PLAYER_LEVEL_UP", self, "OnLevelUp")
+    ns:RegisterEvent("SKILL_LINES_CHANGED", self, "OnSkillLinesChanged")
     ns:RegisterEvent("TRAINER_SHOW", self, "OnTrainerEvent")
     ns:RegisterEvent("TRAINER_UPDATE", self, "OnTrainerEvent")
 end
 
 function Reminders:OnPlayerLogin()
-    self.notifiedLogin = false
-    self:ScanSkills()
+    local snapshot = self:GetSkillSnapshot()
+    self:ScanSkills(snapshot)
+    self.lastSkillSnapshot = snapshot
+end
 
-    local function notify()
-        if ns.Reminders then
-            ns.Reminders:NotifyDue()
+function Reminders:OnLevelUp(event, newLevel)
+    local snapshot = self:GetSkillSnapshot()
+    self:ScanSkills(snapshot)
+    self.lastSkillSnapshot = snapshot
+    self:PrintLevelUpReminders(newLevel)
+    ns:MaybeRefreshUI()
+end
+
+function Reminders:OnSkillLinesChanged()
+    local previous = self.lastSkillSnapshot
+    local current = self:GetSkillSnapshot()
+
+    self:ScanSkills(current)
+
+    if previous then
+        for skillName, skill in pairs(current.skills) do
+            local oldSkill = previous.skills and previous.skills[skillName]
+            if oldSkill and (skill.rank or 0) > (oldSkill.rank or 0) and (skill.category == "primary" or skill.category == "secondary") then
+                self:AnnounceProfessionSkillGain(skillName, skill)
+            end
         end
     end
 
-    if C_Timer and C_Timer.After then
-        C_Timer.After(4, notify)
-    else
-        notify()
-    end
-end
-
-function Reminders:OnReminderEvent()
-    self:ScanSkills()
-    self:NotifyDue(true)
+    self.lastSkillSnapshot = current
     ns:MaybeRefreshUI()
 end
 
 function Reminders:OnTrainerEvent()
     self:ScanTrainer()
-    self:OnReminderEvent()
+    local snapshot = self:GetSkillSnapshot()
+    self:ScanSkills(snapshot)
+    self.lastSkillSnapshot = snapshot
+    ns:MaybeRefreshUI()
 end
 
 function Reminders:IsPrimaryProfession(name)
@@ -108,12 +121,12 @@ function Reminders:GetSkill(skillName)
     return self:GetSkillSnapshot().skills[skillName]
 end
 
-function Reminders:ScanSkills()
+function Reminders:ScanSkills(snapshot)
     if not ns.Database then
         return
     end
 
-    local snapshot = self:GetSkillSnapshot()
+    snapshot = snapshot or self:GetSkillSnapshot()
     for name, skill in pairs(snapshot.skills) do
         if skill.category == "primary" or skill.category == "secondary" then
             ns.Database:RecordProfession(name, skill.rank, skill.maxRank, skill.category)
@@ -208,7 +221,6 @@ function Reminders:ScanTrainer()
 
         local db = ns.Database:GetDB()
         db.trainerCache.classSpells[classFile] = cached
-        ns:Print("cached " .. tostring(#cached) .. " class trainer services for reminder accuracy.")
     end
 end
 
@@ -229,7 +241,6 @@ function Reminders:ClassSpellReminder(row, status, cached)
         id = "class-" .. label,
         title = label,
         detail = detail,
-        cost = costText(row) or (cached and "Trainer cost cached when available" or "Class trainer cost varies"),
         status = status,
     }
 end
@@ -307,6 +318,30 @@ function Reminders:ProfessionRankReminder(skillName, skill, row, status)
     }
 end
 
+function Reminders:GetProfessionRankRows(skillName, skill)
+    if skill.category == "secondary" then
+        return ns.TrainingData.professionRanks and ns.TrainingData.professionRanks[skillName]
+    end
+    if skill.category == "primary" then
+        return (ns.TrainingData.professionRanks and ns.TrainingData.professionRanks[skillName]) or ns.TrainingData.professionRanks.DEFAULT
+    end
+    return nil
+end
+
+function Reminders:GetDueProfessionRank(skillName, skill, level)
+    local rows = self:GetProfessionRankRows(skillName, skill)
+    for _, row in ipairs(rows or {}) do
+        local capOK = not row.requiredCap or (skill.maxRank or 0) <= row.requiredCap
+        local levelOK = not row.requiredLevel or level >= row.requiredLevel
+        local alreadyPast = row.targetCap and (skill.maxRank or 0) >= row.targetCap
+        local canTrain = capOK and levelOK and not alreadyPast and (skill.rank or 0) >= (row.requiredSkill or 0)
+        if canTrain then
+            return row
+        end
+    end
+    return nil
+end
+
 function Reminders:AddProfessionReminders(list, level, snapshot)
     if level >= 5 and snapshot.primaryCount == 0 then
         table.insert(list.due, self:ProfessionUnlockReminder())
@@ -326,13 +361,7 @@ function Reminders:AddProfessionReminders(list, level, snapshot)
     end
 
     for skillName, skill in pairs(snapshot.skills) do
-        local rows = nil
-        if skill.category == "secondary" then
-            rows = ns.TrainingData.professionRanks and ns.TrainingData.professionRanks[skillName]
-        elseif skill.category == "primary" then
-            rows = (ns.TrainingData.professionRanks and ns.TrainingData.professionRanks[skillName]) or ns.TrainingData.professionRanks.DEFAULT
-        end
-
+        local rows = self:GetProfessionRankRows(skillName, skill)
         for _, row in ipairs(rows or {}) do
             local capOK = not row.requiredCap or (skill.maxRank or 0) <= row.requiredCap
             local levelOK = not row.requiredLevel or level >= row.requiredLevel
@@ -349,10 +378,10 @@ function Reminders:AddProfessionReminders(list, level, snapshot)
     end
 end
 
-function Reminders:BuildList()
+function Reminders:BuildList(level, snapshot)
     local list = { due = {}, upcoming = {} }
-    local level = UnitLevel("player") or 1
-    local snapshot = self:GetSkillSnapshot()
+    level = level or UnitLevel("player") or 1
+    snapshot = snapshot or self:GetSkillSnapshot()
 
     self:AddClassReminders(list, level)
     self:AddProfessionReminders(list, level, snapshot)
@@ -360,7 +389,15 @@ function Reminders:BuildList()
     return list
 end
 
-function Reminders:NotifyDue(force)
+function Reminders:PrintChatItem(prefix, item)
+    local message = prefix .. ": " .. item.title .. " - " .. tostring(item.detail or "")
+    if item.kind ~= "class" and item.cost then
+        message = message .. " Cost: " .. tostring(item.cost)
+    end
+    ns:Print(message)
+end
+
+function Reminders:PrintLevelUpReminders(newLevel)
     if not ns.Database then
         return
     end
@@ -369,21 +406,43 @@ function Reminders:NotifyDue(force)
     if not db.settings.notifyTrainingReminders then
         return
     end
-    if self.notifiedLogin and not force then
+
+    local level = tonumber(newLevel) or UnitLevel("player") or 1
+    local snapshot = self.lastSkillSnapshot or self:GetSkillSnapshot()
+    local list = self:BuildList(level, snapshot)
+
+    for _, item in ipairs(list.due) do
+        self:PrintChatItem("DUE", item)
+    end
+    for _, item in ipairs(list.upcoming) do
+        self:PrintChatItem("UPCOMING", item)
+    end
+end
+
+function Reminders:AnnounceProfessionSkillGain(skillName, skill)
+    if not ns.Database then
         return
     end
 
-    local list = self:BuildList()
-    if #list.due > 0 then
-        ns:Print("Training reminders available. Type /hcl reminders for details.")
-        for index = 1, math.min(3, #list.due) do
-            local item = list.due[index]
-            local suffix = item.cost and (" Cost: " .. item.cost) or ""
-            ns:Print(item.title .. " - " .. item.detail .. suffix)
-        end
+    local db = ns.Database:GetDB()
+    if not db.settings.notifyTrainingReminders then
+        return
     end
 
-    self.notifiedLogin = true
+    local level = UnitLevel("player") or 1
+    local row = self:GetDueProfessionRank(skillName, skill, level)
+    if not row then
+        return
+    end
+
+    local rank = skill.rank or 0
+    local maxRank = skill.maxRank or 0
+    local remaining = maxRank - rank
+    if maxRank > 0 and remaining <= 5 then
+        ns:PrintAlert(skillName .. " " .. tostring(rank) .. "/" .. tostring(maxRank) .. " - train " .. row.rank .. " now before you cap")
+    else
+        ns:Print(skillName .. " " .. tostring(rank) .. "/" .. tostring(maxRank) .. " - train " .. row.rank .. " to raise the cap.")
+    end
 end
 
 function Reminders:PrintGroup(title, items)
@@ -397,15 +456,17 @@ function Reminders:PrintGroup(title, items)
         if item.where then
             ns:Print("Where: " .. tostring(item.where))
         end
-        if item.cost then
+        if item.kind ~= "class" and item.cost then
             ns:Print("Cost: " .. tostring(item.cost))
         end
     end
 end
 
 function Reminders:PrintReminders()
-    self:ScanSkills()
-    local list = self:BuildList()
+    local snapshot = self:GetSkillSnapshot()
+    self:ScanSkills(snapshot)
+    self.lastSkillSnapshot = snapshot
+    local list = self:BuildList(UnitLevel("player") or 1, snapshot)
 
     if #list.due == 0 and #list.upcoming == 0 then
         ns:Print("No training reminders right now.")
