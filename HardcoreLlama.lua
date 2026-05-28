@@ -7,6 +7,18 @@ ns.modules = ns.modules or {}
 ns.unsupportedEvents = ns.unsupportedEvents or {}
 ns.frame = ns.frame or CreateFrame("Frame")
 
+local CLASS_COLOR_FALLBACK = {
+    WARRIOR = "c79c6e",
+    PALADIN = "f58cba",
+    HUNTER = "abd473",
+    ROGUE = "fff569",
+    PRIEST = "ffffff",
+    SHAMAN = "0070de",
+    MAGE = "69ccf0",
+    WARLOCK = "9482c9",
+    DRUID = "ff7d0a",
+}
+
 local function trim(value)
     value = tostring(value or "")
     return (value:gsub("^%s+", ""):gsub("%s+$", ""))
@@ -80,6 +92,26 @@ function ns:Now()
         return time()
     end
     return math.floor(GetTime() or 0)
+end
+
+function ns:GetClassColorCode(classFile)
+    classFile = tostring(classFile or "UNKNOWN")
+    local colorTable = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
+    local color = colorTable and colorTable[classFile]
+    if color then
+        if color.colorStr then
+            return "|c" .. tostring(color.colorStr)
+        end
+        if color.r and color.g and color.b then
+            return string.format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
+        end
+    end
+
+    return "|cff" .. (CLASS_COLOR_FALLBACK[classFile] or "8ab4ff")
+end
+
+function ns:ClassColorize(className, classFile)
+    return self:GetClassColorCode(classFile) .. tostring(className or classFile or "Unknown") .. "|r"
 end
 
 function ns:Print(message)
@@ -168,6 +200,7 @@ function ns:PrintHelp()
     self:Print("/hcl stats - print the current character summary")
     self:Print("/hcl reminders - list due and upcoming training")
     self:Print("/hcl fallen - open the fallen heroes log")
+    self:Print("/hcl dungeons - open automatic dungeon history")
     self:Print("/hcl font [9-18|up|down|reset] - adjust window text size")
     self:Print("/hcl grind start [name] - start a grind session")
     self:Print("/hcl grind stop - stop and save the active grind session")
@@ -232,6 +265,8 @@ function ns:HandleSlash(input)
         end
     elseif command == "fallen" or command == "deaths" then
         self:ShowView("fallen")
+    elseif command == "dungeon" or command == "dungeons" or command == "instances" then
+        self:ShowView("dungeons")
     elseif command == "font" or command == "text" then
         self:HandleFontCommand(rest)
     elseif command == "grind" then
