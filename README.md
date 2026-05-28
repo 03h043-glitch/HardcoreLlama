@@ -1,6 +1,6 @@
 # HardcoreLlama
 
-HardcoreLlama is a WoW Classic Hardcore addon for account-wide character tracking, XP source breakdowns, grind-session comparisons, and practical training reminders.
+HardcoreLlama is a WoW Classic Hardcore addon for account-wide character tracking, XP source breakdowns, grind-session comparisons, training reminders, and fallen-character history.
 
 ## Install
 
@@ -18,12 +18,15 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, and best-session comparison by grind/class.
 - Provides a compact resizable tracker window with configurable text size.
 - Shows specific class spell/rank reminders, caches exact class-trainer services after you visit a trainer, and keeps profession reminders tied to the professions and secondary skills the character actually has.
+- Keeps chat reminders quiet: level-up summaries only, plus profession-cap warnings when a gained profession skill point makes the next rank trainable.
+- Records fallen heroes with name, race, class, level, zone, death time, and `/played` time captured at death.
 
 ## Slash Commands
 
 - `/hcl` - Toggle the addon window.
 - `/hcl stats` - Print current character/account summary.
 - `/hcl reminders` - Print due and upcoming training reminders.
+- `/hcl fallen` - Open the fallen heroes log.
 - `/hcl font [9-18|up|down|reset]` - Adjust tracker-window text size or reset the window.
 - `/hcl grind start [name]` - Start a grind session. If no name is supplied, the current zone is used.
 - `/hcl grind stop` - Stop the active grind session and save it.
