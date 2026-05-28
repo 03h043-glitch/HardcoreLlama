@@ -8,7 +8,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 2. Copy the `HardcoreLlama` folder into your WoW Classic Era addon directory, for example:
    `World of Warcraft/_classic_era_/Interface/AddOns/HardcoreLlama`
 3. Restart the game or run `/reload`.
-4. Use `/hcl` or `/hardcorellama` in chat.
+4. Use the minimap button, `/hcl`, or `/hardcorellama` in chat.
 
 ## Features
 
@@ -22,7 +22,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Provides an Info page with rough class-aware weapon progression, item icons, source filters, priest wand targets, and a dual-wield toggle for dual-wield classes.
 - Hides crafted weapon-progression options unless the current character has the profession trained that creates the item.
 - Uses class colors anywhere a character class is shown in addon text.
-- Provides a compact resizable tracker window with configurable text size.
+- Provides a compact resizable tracker window with configurable text size and a draggable minimap button for opening it without slash commands.
 - Shows specific class spell/rank reminders, caches exact class-trainer services after you visit a trainer, and keeps profession reminders tied to the professions and secondary skills the character actually has.
 - Warns on level-up when trained professions or secondary skills fall behind the level x 5 target, and warns Warriors/Rogues when Defense is more than 5 skill below cap.
 - Keeps chat reminders quiet: level-up summaries only, plus profession-cap warnings when a gained profession skill point makes the next rank trainable.
