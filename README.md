@@ -19,10 +19,12 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Automatically logs dungeon runs when entering and leaving party instances, using the dungeon name as the saved run title.
 - Shows dungeon metrics without quest XP/rewards by default, while dungeon row tooltips include the quest-inclusive totals.
 - Trims dungeon timers to the period between the first and last XP gain so waiting at the entrance and exit downtime do not distort run rates.
-- Provides an Info page with rough class-aware weapon progression, including priest wand targets and a dual-wield toggle for dual-wield classes.
+- Provides an Info page with rough class-aware weapon progression, item icons, source filters, priest wand targets, and a dual-wield toggle for dual-wield classes.
+- Hides crafted weapon-progression options unless the current character has the profession trained that creates the item.
 - Uses class colors anywhere a character class is shown in addon text.
 - Provides a compact resizable tracker window with configurable text size.
 - Shows specific class spell/rank reminders, caches exact class-trainer services after you visit a trainer, and keeps profession reminders tied to the professions and secondary skills the character actually has.
+- Warns on level-up when trained professions or secondary skills fall behind the level x 5 target, and warns Warriors/Rogues when Defense is more than 5 skill below cap.
 - Keeps chat reminders quiet: level-up summaries only, plus profession-cap warnings when a gained profession skill point makes the next rank trainable.
 - Records fallen heroes with name, race, class, level, zone, death time, and `/played` time captured at death.
 
@@ -49,7 +51,9 @@ Mob level ranges are captured from visible unit data at the XP event and from ta
 
 Dungeon quest reward money is separated from repeatable raw money when the client exposes the quest reward amount. If the reward is not exposed by the client event, the run still tracks the XP split and all observed money changes.
 
-Weapon progression is intentionally a rough Hardcore leveling guide, not an exhaustive best-in-slot database. It favors realistic quest, dungeon, vendor, crafted, and Auction House checkpoints.
+Weapon progression is intentionally a rough Hardcore leveling guide, not an exhaustive best-in-slot database. It favors realistic quest, dungeon, vendor, crafted, and Auction House checkpoints, and the Info page source toggles let challenge runs hide acquisition methods they cannot use.
+
+Crafted weapon suggestions are additionally gated by the current character's trained professions. For example, crafted wand checkpoints are only shown when Enchanting is trained.
 
 Looted vendor value is estimated from item sell prices when item data is cached by the client. Raw money is tracked from positive money changes during an active grind session or dungeon run.
 
