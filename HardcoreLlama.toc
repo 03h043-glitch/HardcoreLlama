@@ -11,4 +11,5 @@ TrainingData.lua
 Experience.lua
 Grinding.lua
 Reminders.lua
+DeathLog.lua
 UI.lua
