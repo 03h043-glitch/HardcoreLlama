@@ -20,6 +20,25 @@ local function currentState()
     return UnitLevel("player") or 0, UnitXP("player") or 0, UnitXPMax("player") or 0, rested
 end
 
+local function visibleMobLevel(mobName)
+    mobName = ns.Trim(mobName)
+    if mobName == "" or type(UnitName) ~= "function" or type(UnitLevel) ~= "function" then
+        return nil
+    end
+
+    local units = { "target", "mouseover", "focus", "targettarget" }
+    for _, unit in ipairs(units) do
+        if (type(UnitExists) ~= "function" or UnitExists(unit)) and UnitName(unit) == mobName then
+            local level = tonumber(UnitLevel(unit))
+            if level and level > 0 then
+                return level
+            end
+        end
+    end
+
+    return nil
+end
+
 function Experience:OnInitialize()
     ns:RegisterEvent("PLAYER_XP_UPDATE", self, "OnPlayerXPUpdate")
     ns:RegisterEvent("PLAYER_LEVEL_UP", self, "OnPlayerLevelUp")
@@ -116,15 +135,21 @@ function Experience:ParseCombatXP(message)
     local rested = parseNumber(message:match("%+([%d,]+)%s+exp%s+Rested"))
     local source = "OTHER"
     local mobName = nil
+    local mobLevel = nil
 
     if lower:find(" dies", 1, true) or lower:find(" slain", 1, true) then
         source = "KILL"
-        mobName = message:match("^(.-)%s+dies") or message:match("^(.-)%s+is slain")
+        mobName = ns.Trim(message:match("^(.-)%s+dies") or message:match("^(.-)%s+is slain"))
+        if mobName == "" then
+            mobName = nil
+        else
+            mobLevel = visibleMobLevel(mobName)
+        end
     elseif lower:find("discovered", 1, true) or lower:find("discover", 1, true) then
         source = "EXPLORATION"
     end
 
-    return source, amount, rested, { message = message, mobName = mobName }
+    return source, amount, rested, { message = message, mobName = mobName, mobLevel = mobLevel }
 end
 
 function Experience:OnCombatXPGain(event, message)
