@@ -16,6 +16,103 @@ function Grinding:OnPlayerLogin()
     end
 end
 
+function Grinding:UpdateTopMob(active)
+    active = active or self:GetActive()
+    if not active then
+        return nil
+    end
+
+    local topMob = nil
+    for _, mob in pairs(active.mobKills or {}) do
+        if not topMob
+            or (mob.count or 0) > (topMob.count or 0)
+            or ((mob.count or 0) == (topMob.count or 0) and (mob.xp or 0) > (topMob.xp or 0)) then
+            topMob = mob
+        end
+    end
+
+    if topMob then
+        active.primaryMob = {
+            name = topMob.name,
+            count = topMob.count,
+            xp = topMob.xp,
+            minLevel = topMob.minLevel,
+            maxLevel = topMob.maxLevel,
+        }
+    end
+
+    return active.primaryMob
+end
+
+function Grinding:FormatPrimaryMob(mob)
+    if not mob or not mob.name then
+        return nil
+    end
+
+    local minLevel = tonumber(mob.minLevel)
+    local maxLevel = tonumber(mob.maxLevel)
+    local levelText = "L?"
+
+    if minLevel and maxLevel then
+        if minLevel == maxLevel then
+            levelText = "L" .. tostring(minLevel)
+        else
+            levelText = "L" .. tostring(minLevel) .. "-" .. tostring(maxLevel)
+        end
+    end
+
+    return tostring(mob.name) .. " " .. levelText
+end
+
+function Grinding:FormatSessionTitle(session)
+    if not session then
+        return "Grinding Session"
+    end
+
+    local title = ns.Trim(session.name)
+    if title == "" then
+        title = ns.Trim(session.zoneEnd or session.zoneStart or "Grinding Session")
+    end
+
+    local mob = session.primaryMob or self:UpdateTopMob(session)
+    local mobText = self:FormatPrimaryMob(mob)
+    if mobText then
+        return title .. " - " .. mobText
+    end
+
+    return title
+end
+
+function Grinding:RecordMobKill(active, context, xpAmount)
+    if not active or not context then
+        return
+    end
+
+    local mobName = ns.Trim(context.mobName)
+    if mobName == "" then
+        return
+    end
+
+    active.mobKills = active.mobKills or {}
+    local mob = active.mobKills[mobName]
+    if not mob then
+        mob = { name = mobName, count = 0, xp = 0 }
+        active.mobKills[mobName] = mob
+    end
+
+    mob.count = (mob.count or 0) + 1
+    mob.xp = (mob.xp or 0) + (tonumber(xpAmount) or 0)
+
+    local mobLevel = tonumber(context.mobLevel)
+    if mobLevel and mobLevel > 0 then
+        mob.minLevel = mob.minLevel and math.min(mob.minLevel, mobLevel) or mobLevel
+        mob.maxLevel = mob.maxLevel and math.max(mob.maxLevel, mobLevel) or mobLevel
+    end
+
+    active.lastMob = mobName
+    self:UpdateTopMob(active)
+end
+
 function Grinding:GetActive()
     local db = ns.Database and ns.Database:GetDB()
     if not db then
@@ -53,6 +150,7 @@ function Grinding:Start(name)
         restedXP = 0,
         killXP = 0,
         mobCount = 0,
+        mobKills = {},
         rawCopper = 0,
         lootVendorCopper = 0,
         sourceXP = {},
@@ -93,9 +191,7 @@ function Grinding:RecordXPGain(amount, source, restedAmount, context)
     if source == "KILL" then
         active.mobCount = (active.mobCount or 0) + 1
         active.killXP = (active.killXP or 0) + amount
-        if context and context.mobName then
-            active.lastMob = context.mobName
-        end
+        self:RecordMobKill(active, context, amount)
     end
 
     self:UpdateRates(active)
@@ -149,6 +245,7 @@ function Grinding:Stop()
     end
 
     self:UpdateRates(active)
+    self:UpdateTopMob(active)
     active.endedAt = ns:Now()
     active.duration = math.max(1, active.endedAt - (active.startedAt or active.endedAt))
     active.levelEnd = UnitLevel("player") or active.levelStart
@@ -166,7 +263,7 @@ function Grinding:Stop()
     end
 
     db.activeSession = nil
-    ns:Print("Saved grind session: " .. tostring(active.name) .. " - " .. ns:FormatNumber(active.xpGained or 0) .. " XP at " .. ns:FormatNumber(active.xpPerHour or 0) .. " XP/hour.")
+    ns:Print("Saved grind session: " .. self:FormatSessionTitle(active) .. " - " .. ns:FormatNumber(active.xpGained or 0) .. " XP at " .. ns:FormatNumber(active.xpPerHour or 0) .. " XP/hour.")
     ns:MaybeRefreshUI()
 end
 
@@ -179,7 +276,11 @@ function Grinding:BuildStatusLines(active)
     end
 
     self:UpdateRates(active)
+    local topMob = self:UpdateTopMob(active)
     table.insert(lines, "Active: " .. tostring(active.name))
+    if topMob then
+        table.insert(lines, "Top mob: " .. tostring(self:FormatPrimaryMob(topMob)))
+    end
     table.insert(lines, "Duration: " .. ns:FormatDuration(active.duration or 0))
     table.insert(lines, "XP gained: " .. ns:FormatNumber(active.xpGained or 0))
     table.insert(lines, "XP/hour: " .. ns:FormatNumber(active.xpPerHour or 0))
@@ -249,6 +350,6 @@ function Grinding:PrintBest()
 
     ns:Print("Best saved grind sessions by XP/hour:")
     for index, session in ipairs(sessions) do
-        ns:Print(index .. ". " .. tostring(session.name) .. " - " .. tostring(session.class) .. " level " .. tostring(session.levelStart) .. ": " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour, " .. ns:FormatNumber(session.xpGained or 0) .. " XP, " .. ns:FormatMoney(session.totalValueCopper or 0))
+        ns:Print(index .. ". " .. self:FormatSessionTitle(session) .. " - " .. tostring(session.class) .. " level " .. tostring(session.levelStart) .. ": " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour, " .. ns:FormatNumber(session.xpGained or 0) .. " XP, " .. ns:FormatMoney(session.totalValueCopper or 0))
     end
 end
