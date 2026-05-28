@@ -9,12 +9,15 @@ HardcoreLlama.lua
 Database.lua
 TrainingData.lua
 Info.lua
+InfoProgressionFilters.lua
 Experience.lua
 Grinding.lua
 Dungeons.lua
 Reminders.lua
+ReminderSkillProgress.lua
 DeathLog.lua
 UI.lua
 UIExtensions.lua
 DungeonUIOverrides.lua
 InfoUI.lua
+InfoSourceUI.lua
