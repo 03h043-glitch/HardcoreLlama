@@ -6,6 +6,8 @@ ns.Grinding = Grinding
 function Grinding:OnInitialize()
     ns:RegisterEvent("CHAT_MSG_LOOT", self, "OnLootMessage")
     ns:RegisterEvent("PLAYER_MONEY", self, "OnPlayerMoney")
+    ns:RegisterEvent("PLAYER_TARGET_CHANGED", self, "OnPlayerTargetChanged")
+    ns:RegisterEvent("UPDATE_MOUSEOVER_UNIT", self, "OnMouseoverUnit")
 end
 
 function Grinding:OnPlayerLogin()
@@ -14,6 +16,39 @@ function Grinding:OnPlayerLogin()
     if active then
         ns:Print("resumed grind session: " .. tostring(active.name or active.id) .. ". Use /hcl grind stop when finished.")
     end
+end
+
+function Grinding:RememberUnit(unit)
+    local active = self:GetActive()
+    if not active or type(UnitName) ~= "function" or type(UnitLevel) ~= "function" then
+        return
+    end
+    if type(UnitExists) == "function" and not UnitExists(unit) then
+        return
+    end
+    if type(UnitCanAttack) == "function" and not UnitCanAttack("player", unit) then
+        return
+    end
+
+    local mobName = ns.Trim(UnitName(unit))
+    local mobLevel = tonumber(UnitLevel(unit))
+    if mobName == "" or not mobLevel or mobLevel <= 0 then
+        return
+    end
+
+    active.mobLevelHints = active.mobLevelHints or {}
+    local hint = active.mobLevelHints[mobName] or { minLevel = mobLevel, maxLevel = mobLevel }
+    hint.minLevel = math.min(hint.minLevel or mobLevel, mobLevel)
+    hint.maxLevel = math.max(hint.maxLevel or mobLevel, mobLevel)
+    active.mobLevelHints[mobName] = hint
+end
+
+function Grinding:OnPlayerTargetChanged()
+    self:RememberUnit("target")
+end
+
+function Grinding:OnMouseoverUnit()
+    self:RememberUnit("mouseover")
 end
 
 function Grinding:UpdateTopMob(active)
@@ -103,10 +138,23 @@ function Grinding:RecordMobKill(active, context, xpAmount)
     mob.count = (mob.count or 0) + 1
     mob.xp = (mob.xp or 0) + (tonumber(xpAmount) or 0)
 
+    local function rememberLevel(level)
+        level = tonumber(level)
+        if level and level > 0 then
+            mob.minLevel = mob.minLevel and math.min(mob.minLevel, level) or level
+            mob.maxLevel = mob.maxLevel and math.max(mob.maxLevel, level) or level
+        end
+    end
+
     local mobLevel = tonumber(context.mobLevel)
     if mobLevel and mobLevel > 0 then
-        mob.minLevel = mob.minLevel and math.min(mob.minLevel, mobLevel) or mobLevel
-        mob.maxLevel = mob.maxLevel and math.max(mob.maxLevel, mobLevel) or mobLevel
+        rememberLevel(mobLevel)
+    else
+        local hint = active.mobLevelHints and active.mobLevelHints[mobName]
+        if hint then
+            rememberLevel(hint.minLevel)
+            rememberLevel(hint.maxLevel)
+        end
     end
 
     active.lastMob = mobName
@@ -151,6 +199,7 @@ function Grinding:Start(name)
         killXP = 0,
         mobCount = 0,
         mobKills = {},
+        mobLevelHints = {},
         rawCopper = 0,
         lootVendorCopper = 0,
         sourceXP = {},
