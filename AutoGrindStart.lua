@@ -38,6 +38,10 @@ function Grinding:ClearAutoStartKills()
     self.autoStartKills = {}
 end
 
+function Grinding:IsDungeonTrackingActive()
+    return ns.Dungeons and ns.Dungeons.GetActive and ns.Dungeons:GetActive() ~= nil
+end
+
 function Grinding:PruneAutoStartKills(now)
     self.autoStartKills = self.autoStartKills or {}
     for mobName, kills in pairs(self.autoStartKills) do
@@ -76,7 +80,7 @@ function Grinding:RememberAutoStartKill(amount, source, restedAmount, context)
 end
 
 function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
-    if self:GetActive() then
+    if self:GetActive() or self:IsDungeonTrackingActive() then
         return false
     end
 
