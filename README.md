@@ -16,6 +16,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
 - Supports grind sessions with XP per hour, kill XP, average XP per mob, total mob kills, looted item vendor value, the most commonly killed mob with its observed level range, and best-session comparison by grind/class.
+- Automatically starts a grind when three XP-awarding mobs with the same name are killed within three minutes, then seeds the live session with those trigger kills.
 - Opens a live active-grind dashboard when a grind starts, with realtime XP/hour, total XP, mob kills, average XP per mob, rested XP, vendor value, duration, idle timer, and XP source breakdown.
 - Automatically saves and ends an active grind when the player dies or receives no XP or loot for 90 seconds.
 - Automatically logs dungeon runs when entering and leaving party instances, using the dungeon name as the saved run title.
@@ -48,6 +49,8 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 ## Notes
 
 XP source attribution relies on Classic combat-log/chat events. Kill and discovery XP are parsed from English XP messages; quest XP is tagged from quest completion events where the client exposes them, with a fallback attribution window around XP changes.
+
+Auto-started grinds use the same XP-awarding kill messages as normal grind metrics. Grey mobs or other kills that do not generate XP are not counted toward the three-kill trigger.
 
 Mob level ranges are captured from visible unit data at the XP event and from target/mouseover sightings during the active grind. If no level is exposed for a killed mob type, the grind summary still records the mob name and shows an unknown level marker.
 
