@@ -15,7 +15,9 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Tracks every character that logs in on the account/PC through account-wide SavedVariables.
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
-- Supports grind sessions with XP per hour, kill XP, average XP per mob, raw copper gained, estimated vendor value from looted items, the most commonly killed mob with its observed level range, and best-session comparison by grind/class.
+- Supports grind sessions with XP per hour, kill XP, average XP per mob, total mob kills, looted item vendor value, the most commonly killed mob with its observed level range, and best-session comparison by grind/class.
+- Opens a live active-grind dashboard when a grind starts, with realtime XP/hour, total XP, mob kills, average XP per mob, rested XP, vendor value, duration, idle timer, and XP source breakdown.
+- Automatically saves and ends an active grind when the player dies or receives no XP or loot for 90 seconds.
 - Automatically logs dungeon runs when entering and leaving party instances, using the dungeon name as the saved run title.
 - Shows dungeon metrics without quest XP/rewards by default, while dungeon row tooltips include the quest-inclusive totals.
 - Trims dungeon timers to the period between the first and last XP gain so waiting at the entrance and exit downtime do not distort run rates.
@@ -55,6 +57,6 @@ Weapon progression is intentionally a rough Hardcore leveling guide, not an exha
 
 Crafted weapon suggestions are additionally gated by the current character's trained professions. For example, crafted wand checkpoints are only shown when Enchanting is trained.
 
-Looted vendor value is estimated from item sell prices when item data is cached by the client. Raw money is tracked from positive money changes during an active grind session or dungeon run.
+Grind value is intentionally vendor-only: looted item sell prices are counted when item data is cached by the client, while raw copper gained is ignored for grind comparisons. Dungeon runs still keep their separate repeatable raw money and vendor-value metrics.
 
 Training reminder data lives in `TrainingData.lua`. Static class-spell reminders cover early leveling, and trainer-cache reminders become more accurate after the player opens their class trainer.
