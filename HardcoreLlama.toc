@@ -13,6 +13,7 @@ InfoProgressionFilters.lua
 Experience.lua
 Grinding.lua
 GrindingRework.lua
+AutoGrindStart.lua
 Dungeons.lua
 Reminders.lua
 ReminderSkillProgress.lua
