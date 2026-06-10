@@ -200,3 +200,18 @@ function UI:Refresh()
     originalRefresh(self)
     self:UpdateGrindControls()
 end
+
+if ns.Grinding then
+    function ns.Grinding:PrintBest()
+        local sessions = self:GetBestSessions(5)
+        if #sessions == 0 then
+            ns:Print("No saved grind sessions to compare yet.")
+            return
+        end
+
+        ns:Print("Best saved grind sessions by XP/hour:")
+        for index, session in ipairs(sessions) do
+            ns:Print(index .. ". " .. self:FormatSessionTitle(session) .. " - " .. classText(session.class, session.classFile) .. " level " .. tostring(session.levelStart) .. ": " .. ns:FormatNumber(session.xpPerHour or 0) .. " XP/hour, " .. ns:FormatNumber(session.xpGained or 0) .. " XP, " .. ns:FormatMoney(vendorValue(session)) .. " vendor value")
+        end
+    end
+end
