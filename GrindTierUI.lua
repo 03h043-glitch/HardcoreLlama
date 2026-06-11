@@ -224,7 +224,7 @@ function UI:UpdateGrindTierControls()
         setVisible(frame.stopButton, false)
         setVisible(frame.resetButton, false)
         setVisible(frame.startButton, true)
-        setVisible(frame.refreshButton, true)
+        setVisible(frame.refreshButton, false)
     end
 end
 
