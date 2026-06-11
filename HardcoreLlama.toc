@@ -8,6 +8,7 @@
 HardcoreLlama.lua
 Database.lua
 TrainingData.lua
+LevelXPData.lua
 Info.lua
 InfoProgressionFilters.lua
 Experience.lua
@@ -15,6 +16,7 @@ Grinding.lua
 GrindingRework.lua
 AutoGrindStart.lua
 Dungeons.lua
+GrindTiers.lua
 Reminders.lua
 ReminderSkillProgress.lua
 DeathLog.lua
@@ -24,4 +26,5 @@ DungeonUIOverrides.lua
 InfoUI.lua
 InfoSourceUI.lua
 ActiveGrindUI.lua
+GrindTierUI.lua
 MinimapButton.lua
