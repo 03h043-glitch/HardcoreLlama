@@ -19,6 +19,8 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Automatically starts a grind when three XP-awarding mobs with the same name are killed within three minutes outside an active dungeon run, then seeds the live session with those trigger kills.
 - Opens a live active-grind dashboard when a grind starts, with realtime XP/hour, total XP, mob kills, average XP per mob, rested XP, vendor value, duration, idle timer, and XP source breakdown.
 - Automatically saves and ends an active grind when the player dies or receives no XP or loot for 90 seconds.
+- Assigns and announces XP/hour, vendor value/hour, and combined tier rankings when an open-world grind or dungeon run is completed.
+- Shows tier-list tabs for open-world grinds, dungeon grinds, and a combined list where both categories are compared together.
 - Automatically logs dungeon runs when entering and leaving party instances, using the dungeon name as the saved run title.
 - Shows dungeon metrics without quest XP/rewards by default, while dungeon row tooltips include the quest-inclusive totals.
 - Trims dungeon timers to the period between the first and last XP gain so waiting at the entrance and exit downtime do not distort run rates.
@@ -53,6 +55,8 @@ XP source attribution relies on Classic combat-log/chat events. Kill and discove
 Auto-started grinds use the same XP-awarding kill messages as normal grind metrics. Grey mobs or other kills that do not generate XP are not counted toward the three-kill trigger.
 
 Mob level ranges are captured from visible unit data at the XP event and from target/mouseover sightings during the active grind. If no level is exposed for a killed mob type, the grind summary still records the mob name and shows an unknown level marker.
+
+Tier rankings use the XP-to-next-level table from the supplied chart. Each run is assigned a grind level from the highest mob level recorded in the session, then XP/hour is scaled as percent of that level per hour. Vendor value is scaled with the same level requirement denominator, and the combined tier normalizes XP and vendor value within the selected tab before averaging them.
 
 Dungeon quest reward money is separated from repeatable raw money when the client exposes the quest reward amount. If the reward is not exposed by the client event, the run still tracks the XP split and all observed money changes.
 
