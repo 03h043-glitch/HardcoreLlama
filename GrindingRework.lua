@@ -72,6 +72,9 @@ function Grinding:RefreshActiveView()
     if ns.UI and ns.UI.frame and ns.UI.frame:IsShown() and ns.UI.view == "grind" then
         ns.UI:Refresh()
     end
+    if ns.AutoGrindWindow and ns.AutoGrindWindow.IsShown and ns.AutoGrindWindow:IsShown() then
+        ns.AutoGrindWindow:Update(self:GetActive())
+    end
 end
 
 function Grinding:OnIdleUpdate(elapsed)
@@ -123,11 +126,17 @@ function Grinding:OnPlayerLogin(...)
     if active then
         self:MarkActivity(active, "login")
         self:SetIdleWatcher(true)
+        if active.autoStarted and ns.AutoGrindWindow then
+            ns.AutoGrindWindow:Show(active)
+        end
     end
 end
 
 function Grinding:Start(name)
     local alreadyActive = self:GetActive()
+    local suppressWindow = self.suppressNextStartWindow
+    self.suppressNextStartWindow = nil
+
     originalStart(self, name)
 
     local active = self:GetActive()
@@ -141,6 +150,13 @@ function Grinding:Start(name)
         active.totalValueCopper = active.vendorValueCopper
         self:MarkActivity(active, "start")
         self:SetIdleWatcher(true)
+    end
+
+    if suppressWindow then
+        if ns.AutoGrindWindow then
+            ns.AutoGrindWindow:Show(active)
+        end
+        return
     end
 
     if ns.ShowView then
@@ -161,6 +177,9 @@ function Grinding:Stop(reason)
 
     if not self:GetActive() then
         self:SetIdleWatcher(false)
+        if ns.AutoGrindWindow then
+            ns.AutoGrindWindow:Hide()
+        end
     end
 end
 
