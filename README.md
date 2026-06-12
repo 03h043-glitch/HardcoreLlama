@@ -45,7 +45,7 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - `/hcl info` - Open weapon progression info.
 - `/hcl font [9-18|up|down|reset]` - Adjust tracker-window text size or reset the window.
 - `/hcl grind start [name]` - Start a grind session. If no name is supplied, the current zone is used.
-- `/hcl grind stop` - Stop the active grind session and save it.
+- `/hcl grind stop` - Stop the active grind session; sessions below 10 mob kills are discarded instead of saved.
 - `/hcl grind status` - Print the active grind-session snapshot.
 - `/hcl grind best` - Print the best saved grind sessions by XP/hour.
 - `/hcl help` - Show command help.
