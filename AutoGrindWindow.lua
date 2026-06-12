@@ -137,23 +137,11 @@ function AutoGrindWindow:BuildFrame()
     setTextureColor(frame.targetFill, 0.2, 0.95, 0.55, 0.9)
 
     frame.stopButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    frame.stopButton:SetSize(82, 22)
+    frame.stopButton:SetSize(92, 22)
     frame.stopButton:SetText("End Grind")
     frame.stopButton:SetScript("OnClick", function()
         if ns.Grinding then
             ns.Grinding:Stop("manual compact window stop")
-        end
-    end)
-
-    frame.detailsButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    frame.detailsButton:SetSize(72, 22)
-    frame.detailsButton:SetText("Details")
-    frame.detailsButton:SetScript("OnClick", function()
-        if ns.ShowView then
-            ns:ShowView("grind")
-        elseif ns.UI then
-            ns.UI:Show()
-            ns.UI:SetView("grind")
         end
     end)
 
@@ -225,8 +213,6 @@ function AutoGrindWindow:UpdateLayout()
 
     frame.stopButton:ClearAllPoints()
     frame.stopButton:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 10)
-    frame.detailsButton:ClearAllPoints()
-    frame.detailsButton:SetPoint("LEFT", frame.stopButton, "RIGHT", 8, 0)
 end
 
 function AutoGrindWindow:SetMetric(index, label, value, valueColor)
