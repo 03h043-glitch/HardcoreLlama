@@ -141,7 +141,7 @@ function AutoGrindWindow:BuildFrame()
     frame.stopButton:SetText("End Grind")
     frame.stopButton:SetScript("OnClick", function()
         if ns.Grinding then
-            ns.Grinding:Stop("manual compact window stop")
+            ns.Grinding:Stop()
         end
     end)
 
