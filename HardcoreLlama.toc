@@ -17,6 +17,7 @@ GrindingRework.lua
 AutoGrindStart.lua
 Dungeons.lua
 GrindTiers.lua
+GrindCompletionRules.lua
 Reminders.lua
 ReminderSkillProgress.lua
 DeathLog.lua
@@ -27,4 +28,5 @@ InfoUI.lua
 InfoSourceUI.lua
 ActiveGrindUI.lua
 GrindTierUI.lua
+AutoGrindWindow.lua
 MinimapButton.lua
