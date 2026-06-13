@@ -255,8 +255,8 @@ function Grinding:OnAutoStartUpdate(elapsed)
     if active.autoStarted and (active.autoStartMobToken or ns.Trim(active.autoStartMob) ~= "") then
         active.autoStartTargetRemaining = self:GetAutoStartTargetRemaining(active)
         if active.autoStartTargetRemaining <= 0 then
-            local label = active.autoStartMobLabel or active.autoStartMob or "similar mob"
-            self:Stop("no " .. tostring(label) .. " kills for 3 minutes")
+            local label = active.autoStartMobLabel or active.autoStartMob or "similar mobs"
+            self:Stop("no kills from " .. tostring(label) .. " for 3 minutes")
             return
         end
     end
@@ -324,7 +324,7 @@ function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
         self:RefreshActiveView()
     end
 
-    ns:Print("Auto-started grind after " .. tostring(REQUIRED_KILLS) .. " similar " .. tokenLabel(sharedToken) .. " kills in 3 minutes.")
+    ns:Print("Auto-started grind after " .. tostring(REQUIRED_KILLS) .. " similar " .. tokenLabel(sharedToken) .. " mob kills in 3 minutes.")
     return true
 end
 
