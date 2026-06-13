@@ -13,6 +13,30 @@ local previousOnInitialize = Grinding.OnInitialize or function() end
 local previousStart = Grinding.Start or function() end
 local previousRecordXPGain = Grinding.RecordXPGain or function() end
 
+local LOW_SIGNAL_WORDS = {
+    ["the"] = true,
+    ["and"] = true,
+    ["for"] = true,
+    ["with"] = true,
+    ["from"] = true,
+    ["young"] = true,
+    ["old"] = true,
+    ["elder"] = true,
+    ["greater"] = true,
+    ["lesser"] = true,
+    ["minor"] = true,
+    ["major"] = true,
+    ["small"] = true,
+    ["large"] = true,
+    ["ancient"] = true,
+    ["mature"] = true,
+    ["raging"] = true,
+    ["enraged"] = true,
+    ["frenzied"] = true,
+    ["diseased"] = true,
+    ["corrupted"] = true,
+}
+
 local function normalizedSource(source)
     if ns.Database and ns.Database.NormalizeSource then
         return ns.Database:NormalizeSource(source)
@@ -32,12 +56,54 @@ local function normalizeMobName(name)
     return string.lower(ns.Trim(name))
 end
 
-local function autoGrindName(mobName)
+local function tokenLabel(token)
+    token = tostring(token or "")
+    return (token:gsub("^%l", string.upper))
+end
+
+local function getMobTokens(name)
+    local normalized = normalizeMobName(name)
+    local tokens = {}
+    local tokenSet = {}
+
+    for word in string.gmatch(normalized, "[%a%d']+") do
+        word = word:gsub("^'+", ""):gsub("'+$", "")
+        if string.len(word) >= 3 and not LOW_SIGNAL_WORDS[word] and not tokenSet[word] then
+            table.insert(tokens, word)
+            tokenSet[word] = true
+        end
+    end
+
+    if #tokens == 0 and normalized ~= "" then
+        tokens[1] = normalized
+        tokenSet[normalized] = true
+    end
+
+    return tokens, tokenSet
+end
+
+local function autoGrindName(mobName, sharedToken)
     local zone = ns.Trim((GetZoneText and GetZoneText()) or "")
     if zone ~= "" then
         return zone
     end
+    if sharedToken and sharedToken ~= "" then
+        return tokenLabel(sharedToken) .. " Grind"
+    end
     return tostring(mobName or "Auto Grind") .. " Grind"
+end
+
+local function uniqueMobNames(kills)
+    local names = {}
+    local seen = {}
+    for _, kill in ipairs(kills or {}) do
+        local name = ns.Trim(kill.mobName)
+        if name ~= "" and not seen[name] then
+            table.insert(names, name)
+            seen[name] = true
+        end
+    end
+    return names
 end
 
 function Grinding:ClearAutoStartKills()
@@ -50,14 +116,9 @@ end
 
 function Grinding:PruneAutoStartKills(now)
     self.autoStartKills = self.autoStartKills or {}
-    for mobName, kills in pairs(self.autoStartKills) do
-        for index = #kills, 1, -1 do
-            if now - (kills[index].time or 0) > WINDOW_SECONDS then
-                table.remove(kills, index)
-            end
-        end
-        if #kills == 0 then
-            self.autoStartKills[mobName] = nil
+    for index = #self.autoStartKills, 1, -1 do
+        if now - (self.autoStartKills[index].time or 0) > WINDOW_SECONDS then
+            table.remove(self.autoStartKills, index)
         end
     end
 end
@@ -69,25 +130,59 @@ function Grinding:RememberAutoStartKill(amount, source, restedAmount, context)
     end
 
     local now = ns:Now()
+    local tokens, tokenSet = getMobTokens(mobName)
     self:PruneAutoStartKills(now)
     self.autoStartKills = self.autoStartKills or {}
-    local kills = self.autoStartKills[mobName] or {}
-    self.autoStartKills[mobName] = kills
 
-    table.insert(kills, {
+    local record = {
         time = now,
         amount = math.floor(tonumber(amount) or 0),
         source = source,
         rested = math.floor(tonumber(restedAmount) or 0),
         context = copyContext(context),
-    })
+        mobName = mobName,
+        tokens = tokens,
+        tokenSet = tokenSet,
+    }
 
-    return kills, mobName
+    table.insert(self.autoStartKills, record)
+    return record, mobName
+end
+
+function Grinding:FindAutoStartGroup(record)
+    if not record then
+        return nil
+    end
+
+    local bestToken
+    local bestMatches
+    for _, token in ipairs(record.tokens or {}) do
+        local matches = {}
+        for _, kill in ipairs(self.autoStartKills or {}) do
+            if kill.tokenSet and kill.tokenSet[token] then
+                table.insert(matches, kill)
+            end
+        end
+
+        if #matches >= REQUIRED_KILLS and (not bestMatches or #matches > #bestMatches) then
+            bestToken = token
+            bestMatches = matches
+        end
+    end
+
+    if not bestMatches then
+        return nil
+    end
+
+    while #bestMatches > REQUIRED_KILLS do
+        table.remove(bestMatches, 1)
+    end
+    return bestMatches, bestToken
 end
 
 function Grinding:GetAutoStartTargetRemaining(active)
     active = active or self:GetActive()
-    if not active or not active.autoStarted or ns.Trim(active.autoStartMob) == "" then
+    if not active or not active.autoStarted or (not active.autoStartMobToken and ns.Trim(active.autoStartMob) == "") then
         return 0
     end
 
@@ -96,13 +191,24 @@ function Grinding:GetAutoStartTargetRemaining(active)
     return math.max(0, TARGET_TIMEOUT_SECONDS - (now - lastKill))
 end
 
-function Grinding:MarkAutoStartMobKill(active, mobName, timestamp)
+function Grinding:MobMatchesAutoStartTarget(active, mobName)
     active = active or self:GetActive()
-    if not active or not active.autoStarted or ns.Trim(active.autoStartMob) == "" then
+    if not active or not active.autoStarted then
         return false
     end
 
-    if normalizeMobName(mobName) ~= normalizeMobName(active.autoStartMob) then
+    local token = active.autoStartMobToken
+    if token and token ~= "" then
+        local _, tokenSet = getMobTokens(mobName)
+        return tokenSet[token] == true
+    end
+
+    return normalizeMobName(mobName) == normalizeMobName(active.autoStartMob)
+end
+
+function Grinding:MarkAutoStartMobKill(active, mobName, timestamp)
+    active = active or self:GetActive()
+    if not active or not active.autoStarted or not self:MobMatchesAutoStartTarget(active, mobName) then
         return false
     end
 
@@ -146,10 +252,11 @@ function Grinding:OnAutoStartUpdate(elapsed)
         return
     end
 
-    if active.autoStarted and ns.Trim(active.autoStartMob) ~= "" then
+    if active.autoStarted and (active.autoStartMobToken or ns.Trim(active.autoStartMob) ~= "") then
         active.autoStartTargetRemaining = self:GetAutoStartTargetRemaining(active)
         if active.autoStartTargetRemaining <= 0 then
-            self:Stop("no " .. tostring(active.autoStartMob) .. " kills for 3 minutes")
+            local label = active.autoStartMobLabel or active.autoStartMob or "similar mob"
+            self:Stop("no " .. tostring(label) .. " kills for 3 minutes")
             return
         end
     end
@@ -173,19 +280,15 @@ function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
         return false
     end
 
-    local kills, mobName = self:RememberAutoStartKill(amount, source, restedAmount, context)
-    if not kills or #kills < REQUIRED_KILLS then
+    local record, mobName = self:RememberAutoStartKill(amount, source, restedAmount, context)
+    local replay, sharedToken = self:FindAutoStartGroup(record)
+    if not replay or not sharedToken then
         return false
-    end
-
-    local replay = {}
-    for index = math.max(1, #kills - REQUIRED_KILLS + 1), #kills do
-        table.insert(replay, kills[index])
     end
 
     self:ClearAutoStartKills()
     self.suppressNextStartWindow = true
-    self:Start(autoGrindName(mobName))
+    self:Start(autoGrindName(mobName, sharedToken))
 
     local active = self:GetActive()
     if not active then
@@ -193,8 +296,13 @@ function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
         return false
     end
 
+    local label = tokenLabel(sharedToken) .. " mobs"
     active.autoStarted = true
-    active.autoStartMob = mobName
+    active.autoStartMob = label
+    active.autoStartMobLabel = label
+    active.autoStartMobToken = sharedToken
+    active.autoStartExampleMob = mobName
+    active.autoStartMatchedMobNames = uniqueMobNames(replay)
     active.autoStartKillCount = #replay
     active.autoStartWindowSeconds = WINDOW_SECONDS
     active.autoStartTargetTimeout = TARGET_TIMEOUT_SECONDS
@@ -205,7 +313,7 @@ function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
     end
 
     local lastReplay = replay[#replay]
-    self:MarkAutoStartMobKill(active, mobName, lastReplay and lastReplay.time or ns:Now())
+    self:MarkAutoStartMobKill(active, lastReplay and lastReplay.mobName or mobName, lastReplay and lastReplay.time or ns:Now())
 
     if self.UpdateRates then
         self:UpdateRates(active)
@@ -216,7 +324,7 @@ function Grinding:TryAutoStartFromKill(amount, source, restedAmount, context)
         self:RefreshActiveView()
     end
 
-    ns:Print("Auto-started grind after " .. tostring(REQUIRED_KILLS) .. " " .. tostring(mobName) .. " kills in 3 minutes.")
+    ns:Print("Auto-started grind after " .. tostring(REQUIRED_KILLS) .. " similar " .. tokenLabel(sharedToken) .. " kills in 3 minutes.")
     return true
 end
 
