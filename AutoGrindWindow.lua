@@ -246,7 +246,8 @@ function AutoGrindWindow:UpdateTargetBar(active)
     end
 
     if active and active.autoStartMob then
-        frame.targetLabel:SetText(color(C.blue, "Target mob: ") .. color(C.white, active.autoStartMob) .. color(C.muted, "  " .. ns:FormatDuration(remaining)))
+        local prefix = active.autoStartMobToken and "Target group: " or "Target mob: "
+        frame.targetLabel:SetText(color(C.blue, prefix) .. color(C.white, active.autoStartMob) .. color(C.muted, "  " .. ns:FormatDuration(remaining)))
     else
         frame.targetLabel:SetText(color(C.dim, "Target timer inactive"))
     end
