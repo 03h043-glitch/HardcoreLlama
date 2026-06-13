@@ -16,10 +16,10 @@ HardcoreLlama is a WoW Classic Hardcore addon for account-wide character trackin
 - Records character name, realm, class, level, XP gained, rested XP gained, and XP source breakdowns.
 - Tracks fastest recorded time through each level and highest level reached by class.
 - Supports grind sessions with XP per hour, kill XP, average XP per mob, total mob kills, looted item vendor value, the most commonly killed mob with its observed level range, and best-session comparison by grind/class.
-- Automatically starts a grind when three XP-awarding mobs with the same name are killed within three minutes outside an active dungeon run, then seeds the live session with those trigger kills.
+- Automatically starts a grind when three XP-awarding mobs with similar names share a meaningful word within three minutes outside an active dungeon run, then seeds the live session with those trigger kills.
 - Shows auto-started grinds in a compact resizable live tracker instead of opening the primary addon window.
 - Opens the full live active-grind dashboard for manually started grinds, with realtime XP/hour, total XP, mob kills, average XP per mob, rested XP, vendor value, duration, idle timer, and XP source breakdown.
-- Automatically saves and ends an active grind when the player dies, opens a vendor, casts Hearthstone, receives no XP or loot for 90 seconds, or goes three minutes without killing the mob type that triggered auto-start.
+- Automatically saves and ends an active grind when the player dies, opens a vendor, casts Hearthstone, receives no XP or loot for 90 seconds, or goes three minutes without killing the mob name group that triggered auto-start.
 - Discards completed grinds with fewer than 10 mob kills so short accidental sessions do not pollute history or tier rankings.
 - Assigns and announces XP/hour, vendor value/hour, and combined tier rankings when an open-world grind or dungeon run is completed.
 - Shows tier-list tabs for open-world grinds, dungeon grinds, and a combined list where both categories are compared together.
@@ -56,7 +56,9 @@ XP source attribution relies on Classic combat-log/chat events. Kill and discove
 
 Auto-started grinds use the same XP-awarding kill messages as normal grind metrics. Grey mobs or other kills that do not generate XP are not counted toward the three-kill trigger.
 
-After an auto-started grind begins, the trigger mob type remains important: killing other mobs can keep the normal XP/loot activity timer alive, but the grind still ends if the original trigger mob type is not killed again within three minutes.
+Auto-start grouping is token-based. For example, Kolkar Scout, Kolkar Wrangler, and Kolkar Windcaller can combine into one Kolkar grind because they share `kolkar`; mobs that share a later meaningful word can also group. Very generic descriptor words are ignored.
+
+After an auto-started grind begins, the trigger mob group remains important: killing other mobs can keep the normal XP/loot activity timer alive, but the grind still ends if the original trigger group is not killed again within three minutes.
 
 Mob level ranges are captured from visible unit data at the XP event and from target/mouseover sightings during the active grind. If no level is exposed for a killed mob type, the grind summary still records the mob name and shows an unknown level marker.
 
