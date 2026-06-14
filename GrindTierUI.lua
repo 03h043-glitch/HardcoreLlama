@@ -12,7 +12,24 @@ local C = {
     muted = "|cff9d9d9d",
     dim = "|cff666666",
     warning = "|cffffb347",
+    xp = "|cff69ccf0",
+    value = "|cffffd100",
+    combined = "|cffd6a9ff",
     reset = "|r",
+}
+
+local TIER_COLORS = {
+    S = "|cffff4d4d",
+    A = "|cffff9f40",
+    B = "|cffffff66",
+    C = "|cff33ff99",
+    D = "|cff9d9d9d",
+}
+
+local METRIC_COLORS = {
+    xp = C.xp,
+    value = C.value,
+    combined = C.combined,
 }
 
 local TABS = {
@@ -49,6 +66,10 @@ local function makeButton(parent, text, width, onClick)
     button:SetText(text)
     button:SetScript("OnClick", onClick)
     return button
+end
+
+local function divider(char, width)
+    return string.rep(char or "-", width or 38)
 end
 
 function UI:GetGrindTierSettings()
@@ -121,26 +142,33 @@ local function sortedForMetric(records, rankField)
     return sorted
 end
 
-function UI:TierRecordLine(record, rankField, metric)
+function UI:TierMetricHeader(lines, title, metric)
+    table.insert(lines, "")
+    table.insert(lines, color(METRIC_COLORS[metric] or C.title, "== " .. tostring(title) .. " =="))
+    table.insert(lines, color(C.dim, divider("-", 42)))
+end
+
+function UI:TierRecordLine(record, rankField, metric, tierField)
     local kindText = ""
     if self:GetGrindTierScope() == "combined" then
         kindText = record.kind == "dungeon" and " [Dungeon]" or " [World]"
     end
 
-    local line = color(C.title, "#" .. tostring(record[rankField] or "?") .. " ") .. color(C.accent, tostring(record.title or "Session")) .. color(C.muted, " L" .. tostring(record.grindLevel or "?") .. kindText)
+    local tierColor = TIER_COLORS[record[tierField] or ""] or C.title
+    local line = color(tierColor, "#" .. tostring(record[rankField] or "?") .. " ") .. color(C.white, tostring(record.title or "Session")) .. color(C.muted, " L" .. tostring(record.grindLevel or "?") .. kindText)
     local detail
     if metric == "xp" then
-        detail = string.format("%.1f%% level/hr", record.xpLevelPercentPerHour or 0) .. "  |  " .. ns:FormatNumber(record.xpPerHour or 0) .. " XP/hr"
+        detail = color(C.xp, string.format("%.1f%% level/hr", record.xpLevelPercentPerHour or 0)) .. color(C.muted, "  |  " .. ns:FormatNumber(record.xpPerHour or 0) .. " XP/hr")
     elseif metric == "value" then
-        detail = ns:FormatMoney(record.vendorPerHour or 0) .. "/hr vendor  |  scaled " .. string.format("%.4f", record.valueLevelRate or 0)
+        detail = color(C.value, ns:FormatMoney(record.vendorPerHour or 0) .. "/hr vendor") .. color(C.muted, "  |  scaled " .. string.format("%.4f", record.valueLevelRate or 0))
     else
-        detail = "Score " .. string.format("%.0f", (record.combinedScore or 0) * 100) .. "  |  " .. string.format("%.1f%% level/hr", record.xpLevelPercentPerHour or 0) .. "  |  " .. ns:FormatMoney(record.vendorPerHour or 0) .. "/hr"
+        detail = color(C.combined, "Score " .. string.format("%.0f", (record.combinedScore or 0) * 100)) .. color(C.muted, "  |  ") .. color(C.xp, string.format("%.1f%% level/hr", record.xpLevelPercentPerHour or 0)) .. color(C.muted, "  |  ") .. color(C.value, ns:FormatMoney(record.vendorPerHour or 0) .. "/hr")
     end
-    return line, color(C.muted, "  " .. classText(record.class, record.classFile) .. "  " .. detail)
+    return line, color(C.muted, "  " .. classText(record.class, record.classFile) .. "  ") .. detail
 end
 
 function UI:AddTierMetric(lines, title, records, tierField, rankField, metric)
-    self:Section(lines, title)
+    self:TierMetricHeader(lines, title, metric)
     if #records == 0 then
         table.insert(lines, color(C.muted, "No sessions recorded yet."))
         return
@@ -153,11 +181,12 @@ function UI:AddTierMetric(lines, title, records, tierField, rankField, metric)
         for _, record in ipairs(sorted) do
             if record[tierField] == tier then
                 if not shownTier then
-                    table.insert(lines, color(C.title, tier .. " Tier"))
+                    table.insert(lines, "")
+                    table.insert(lines, color(TIER_COLORS[tier] or C.title, tier .. " TIER") .. color(C.dim, "  " .. divider("-", 32)))
                     shownTier = true
                 end
                 shownAny = true
-                local headline, detail = self:TierRecordLine(record, rankField, metric)
+                local headline, detail = self:TierRecordLine(record, rankField, metric, tierField)
                 table.insert(lines, headline)
                 table.insert(lines, detail)
             end
@@ -180,13 +209,14 @@ function UI:BuildGrindTierLines()
     local scopeLabel = ns.GrindTiers:GetScopeLabel(scope)
     local records = ns.GrindTiers:RankRecords(scope)
 
-    self:Section(lines, "Tier List - " .. scopeLabel)
-    table.insert(lines, color(C.muted, "XP and vendor value are scaled by the XP needed at the highest mob level recorded in each run."))
+    table.insert(lines, color(C.title, "TIER LIST: " .. string.upper(scopeLabel)))
+    table.insert(lines, color(C.dim, divider("=", 44)))
+    table.insert(lines, color(C.muted, "XP and vendor value are scaled by XP needed at the highest mob level recorded in each run."))
     table.insert(lines, color(C.dim, "Combined score normalizes XP and vendor value within this tab, then averages them."))
 
-    self:AddTierMetric(lines, "XP/Hour Tier", records, "xpTier", "xpRank", "xp")
-    self:AddTierMetric(lines, "Vendor Value Tier", records, "valueTier", "valueRank", "value")
-    self:AddTierMetric(lines, "Combined Tier", records, "combinedTier", "combinedRank", "combined")
+    self:AddTierMetric(lines, "XP / Hour", records, "xpTier", "xpRank", "xp")
+    self:AddTierMetric(lines, "Vendor Value / Hour", records, "valueTier", "valueRank", "value")
+    self:AddTierMetric(lines, "Combined Score", records, "combinedTier", "combinedRank", "combined")
     return lines
 end
 
