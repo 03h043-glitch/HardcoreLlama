@@ -287,7 +287,52 @@ function Info:IconText(row)
     return table.concat(icons, "") .. " "
 end
 
-function Info:AddRow(lines, row, prefix)
+function Info:ItemReference(itemID)
+    if not itemID then
+        return nil
+    end
+    if type(GetItemInfo) == "function" then
+        local link = select(2, GetItemInfo(itemID))
+        if link then
+            return link
+        end
+    end
+    return "item:" .. tostring(itemID)
+end
+
+function Info:BuildRowTooltip(row)
+    row = self:ApplyProgressionMetadata(row)
+    local lines = {
+        "Level: " .. tostring(row.level or "?"),
+        "Source: " .. tostring(row.sourceLabel or self:SourceText(row.sources)),
+        "Where: " .. tostring(row.where or "Unknown"),
+    }
+    if row.note then
+        table.insert(lines, "Note: " .. tostring(row.note))
+    end
+    if row.profession then
+        table.insert(lines, "Requires: " .. tostring(row.profession) .. " trained.")
+    end
+
+    local itemIDs = row.itemIDs or {}
+    local extraItems = {}
+    for index = 2, #itemIDs do
+        local ref = self:ItemReference(itemIDs[index])
+        if ref then
+            table.insert(extraItems, ref)
+        end
+    end
+
+    local extraItemText = #extraItems > 0 and ("Also listed: " .. table.concat(extraItems, ", ")) or nil
+    return {
+        title = tostring(row.name or "Weapon"),
+        itemID = itemIDs[1],
+        extraItemText = extraItemText,
+        lines = lines,
+    }
+end
+
+function Info:AddRow(lines, row, prefix, hoverRows)
     if not row then
         return
     end
@@ -295,6 +340,7 @@ function Info:AddRow(lines, row, prefix)
     row = self:ApplyProgressionMetadata(row)
     local sourceText = row.sourceLabel or self:SourceText(row.sources)
     local sourceSuffix = sourceText ~= "" and color(C.muted, " [" .. sourceText .. "]") or ""
+    local lineIndex = #lines + 1
 
     table.insert(lines, prefix .. self:IconText(row) .. "L" .. tostring(row.level or "?") .. "  " .. color(C.white, row.name) .. sourceSuffix)
     table.insert(lines, color(C.muted, "  Where: ") .. tostring(row.where or "Unknown"))
@@ -303,6 +349,12 @@ function Info:AddRow(lines, row, prefix)
     end
     if row.profession then
         table.insert(lines, color(C.muted, "  Requires: ") .. tostring(row.profession) .. " trained.")
+    end
+
+    if hoverRows then
+        local tooltip = self:BuildRowTooltip(row)
+        tooltip.line = lineIndex
+        table.insert(hoverRows, tooltip)
     end
 end
 
@@ -332,6 +384,7 @@ function Info:BuildLines()
     local modeLabel = mode == "dual" and "Dual wield" or mode == "twohand" and "2H" or mode == "wand" and "Wands" or mode == "single" and "Main hand" or "Caster"
 
     local lines = {}
+    local hoverRows = {}
     table.insert(lines, color(C.accent, "WEAPON PROGRESSION"))
     table.insert(lines, "--------------------------------")
     table.insert(lines, classLabel .. color(C.muted, "  Level ") .. color(C.white, level) .. color(C.muted, "  " .. modeLabel))
@@ -340,18 +393,18 @@ function Info:BuildLines()
 
     if #rows == 0 then
         table.insert(lines, color(C.warning, "No weapon rows match the selected sources and trained professions."))
-        return lines
+        return lines, hoverRows
     end
 
     if current then
-        self:AddRow(lines, current, "Target now: ")
+        self:AddRow(lines, current, "Target now: ", hoverRows)
     else
         table.insert(lines, "Target now: " .. color(C.muted, "No matching option at or below your level."))
     end
 
     table.insert(lines, "")
     if nextRow then
-        self:AddRow(lines, nextRow, "Next upgrade: ")
+        self:AddRow(lines, nextRow, "Next upgrade: ", hoverRows)
     else
         table.insert(lines, "Next upgrade: " .. color(C.muted, "You are near the end of this rough progression path."))
     end
@@ -363,7 +416,7 @@ function Info:BuildLines()
     local shown = 0
     for _, row in ipairs(rows) do
         if (row.level or 0) >= level - 8 then
-            self:AddRow(lines, row, "")
+            self:AddRow(lines, row, "", hoverRows)
             shown = shown + 1
             if shown >= 6 then
                 break
@@ -373,12 +426,12 @@ function Info:BuildLines()
 
     if shown == 0 then
         for index, row in ipairs(rows) do
-            self:AddRow(lines, row, "")
+            self:AddRow(lines, row, "", hoverRows)
             if index >= 6 then
                 break
             end
         end
     end
 
-    return lines
+    return lines, hoverRows
 end
