@@ -91,12 +91,14 @@ function UI:Refresh()
 
     if self.view == "info" then
         local lines
+        local hoverRows
         if ns.Info then
-            lines = ns.Info:BuildLines()
+            lines, hoverRows = ns.Info:BuildLines()
         else
             lines = { "WEAPON PROGRESSION", "--------------------------------", "Info module is not loaded." }
+            hoverRows = {}
         end
-        self:SetLines(lines)
+        self:SetLines(lines, hoverRows)
         self:UpdateInfoControls()
         return
     end
