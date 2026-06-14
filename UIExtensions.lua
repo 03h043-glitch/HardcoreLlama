@@ -42,6 +42,12 @@ local function formatDate(timestamp)
     return "Unknown time"
 end
 
+local function addTooltipLines(tooltip, lines)
+    for _, line in ipairs(lines or {}) do
+        tooltip:AddLine(line, 0.86, 0.86, 0.86, false)
+    end
+end
+
 local originalBuildFrame = UI.BuildFrame
 function UI:BuildFrame()
     local frame = originalBuildFrame(self)
@@ -78,10 +84,19 @@ function UI:ShowTooltip(row)
     end
 
     GameTooltip:SetOwner(row.button, "ANCHOR_RIGHT")
-    GameTooltip:AddLine(row.title or "Dungeon", 1, 0.82, 0, false)
-    for _, line in ipairs(row.lines or {}) do
-        GameTooltip:AddLine(line, 0.86, 0.86, 0.86, false)
+    if row.itemID and GameTooltip.SetHyperlink then
+        GameTooltip:SetHyperlink("item:" .. tostring(row.itemID))
+        if row.extraItemText and row.extraItemText ~= "" then
+            GameTooltip:AddLine(" ", 1, 1, 1, false)
+            GameTooltip:AddLine(row.extraItemText, 0.86, 0.86, 0.86, false)
+        end
+        addTooltipLines(GameTooltip, row.lines)
+        GameTooltip:Show()
+        return
     end
+
+    GameTooltip:AddLine(row.title or "Details", 1, 0.82, 0, false)
+    addTooltipLines(GameTooltip, row.lines)
     GameTooltip:Show()
 end
 
@@ -183,19 +198,29 @@ function UI:BuildOverviewLines()
     end
 
     self:Section(lines, "Fastest Levels")
-    local count = 0
-    for level = 1, 60 do
-        local record = db.fastestLevelTimes and db.fastestLevelTimes[level]
-        if record then
-            count = count + 1
-            table.insert(lines, color(C.white, "Level " .. tostring(level)) .. color(C.muted, "  " .. ns:FormatDuration(record.seconds or 0) .. "  " .. tostring(record.character or "Unknown") .. "  ") .. classText(record.class, record.classFile))
-            if count >= 6 then
-                break
-            end
+    local fastest = {}
+    for levelKey, record in pairs(db.fastestLevelTimes or {}) do
+        local level = tonumber(levelKey) or tonumber(record and record.level)
+        if level and record then
+            table.insert(fastest, { level = level, record = record })
         end
     end
-    if count == 0 then
+
+    table.sort(fastest, function(left, right)
+        if left.level == right.level then
+            return (left.record.seconds or math.huge) < (right.record.seconds or math.huge)
+        end
+        return left.level > right.level
+    end)
+
+    if #fastest == 0 then
         table.insert(lines, color(C.muted, "No completed level timing yet."))
+    else
+        for _, entry in ipairs(fastest) do
+            local record = entry.record
+            local source = record.source and record.source ~= "" and color(C.dim, "  " .. tostring(record.source)) or ""
+            table.insert(lines, color(C.white, "Level " .. tostring(entry.level)) .. color(C.muted, "  " .. ns:FormatDuration(record.seconds or 0) .. "  " .. tostring(record.character or "Unknown") .. "  ") .. classText(record.class, record.classFile) .. source)
+        end
     end
 
     return lines
