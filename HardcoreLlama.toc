@@ -29,4 +29,5 @@ InfoSourceUI.lua
 ActiveGrindUI.lua
 GrindTierUI.lua
 AutoGrindWindow.lua
+GrindManagement.lua
 MinimapButton.lua
