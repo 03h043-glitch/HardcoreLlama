@@ -2,6 +2,7 @@ local _, ns = ...
 
 local Grinding = ns.Grinding
 local Dungeons = ns.Dungeons
+local UI = ns.UI
 local AutoGrindWindow = ns.AutoGrindWindow
 
 local function getUISettings()
@@ -131,6 +132,25 @@ if Dungeons then
             self:UpdateRates(active)
         end
         ns:MaybeRefreshUI()
+    end
+end
+
+if UI then
+    local previousBuildFrame = UI.BuildFrame
+    function UI:BuildFrame()
+        local frame = previousBuildFrame(self)
+        if frame.startButton and not frame.compactGrindStartButton then
+            frame.startButton:SetScript("OnClick", function()
+                if ns.Grinding then
+                    ns.Grinding:Start((GetZoneText and GetZoneText()) or "Grinding Session")
+                end
+                if ns.UI then
+                    ns.UI:Hide()
+                end
+            end)
+            frame.compactGrindStartButton = true
+        end
+        return frame
     end
 end
 
