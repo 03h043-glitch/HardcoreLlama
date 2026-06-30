@@ -32,4 +32,5 @@ AutoGrindWindow.lua
 GrindManagement.lua
 GrindRestedTierFix.lua
 GrindWindowHotfix.lua
+GrindTimeToLevel.lua
 MinimapButton.lua
