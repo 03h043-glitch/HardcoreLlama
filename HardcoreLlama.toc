@@ -35,4 +35,5 @@ GrindWindowHotfix.lua
 GrindTimeToLevel.lua
 GrindTimeToLevelLayout.lua
 GrindTierNormalization.lua
+GrindTierDistribution.lua
 MinimapButton.lua
