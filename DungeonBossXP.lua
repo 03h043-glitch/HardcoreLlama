@@ -68,7 +68,6 @@ local DUNGEONS = {
         aliases = { "shadowfang", "shadowfangkeep" },
         bosses = {
             { name = "Rethilgore", level = 20 },
-            { name = "Shadow Charger", level = 20, note = "encounter" },
             { name = "Razorclaw the Butcher", level = 22 },
             { name = "Baron Silverlaine", level = 24 },
             { name = "Commander Springvale", level = 24 },
