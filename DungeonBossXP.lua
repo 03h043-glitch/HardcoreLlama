@@ -545,6 +545,9 @@ if UI then
     function UI:Refresh()
         if self.frame and self.view == "bossxp" then
             self:SetLines(DungeonBossXP:BuildLines(), {})
+            if self.UpdateInfoControls then
+                self:UpdateInfoControls()
+            end
             if self.UpdateGrindControls then
                 self:UpdateGrindControls()
             end
