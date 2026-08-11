@@ -36,4 +36,5 @@ GrindTimeToLevel.lua
 GrindTimeToLevelLayout.lua
 GrindTierNormalization.lua
 GrindTierDistribution.lua
+DungeonBossXP.lua
 MinimapButton.lua
